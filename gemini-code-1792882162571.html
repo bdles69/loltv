@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NXST IPTV - Multi Stream Edition</title>
+  <!-- HLS.js for Streaming m3u8 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    :root {
+      --bg-color: #2b050d;
+      --bg-gradient: radial-gradient(circle at 50% 30%, #5e0c1b 0%, #2b050d 70%), repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.05) 0px, rgba(212, 175, 55, 0.05) 2px, transparent 2px, transparent 8px);
+      --header-bg: linear-gradient(180deg, #4a0914 0%, #1c0207 100%);
+      --border-color: #d4af37;
+      --accent-color: #ffe082;
+      --card-bg: radial-gradient(circle at center, #94182f 0%, #4a0613 70%, #240107 100%);
+      --info-bg: linear-gradient(180deg, #59111e 0%, #36070f 50%, #1f0207 100%);
+      --btn-bg: linear-gradient(180deg, #ffe082 0%, #c49321 100%);
+      --btn-text: #1a0500;
+      --ticker-bg: #800000;
+    }
+
+    [data-theme="mint-green"] {
+      --bg-color: #1b4d3e;
+      --bg-gradient: radial-gradient(circle at 50% 30%, #2e8b57 0%, #1b4d3e 70%), repeating-linear-gradient(45deg, rgba(152, 255, 152, 0.05) 0px, rgba(152, 255, 152, 0.05) 2px, transparent 2px, transparent 8px);
+      --header-bg: linear-gradient(180deg, #235e4d 0%, #0f2b22 100%);
+      --border-color: #98ff98;
+      --accent-color: #e0f8e0;
+      --card-bg: radial-gradient(circle at center, #2e7d5d 0%, #1b4d3e 70%, #0d261f 100%);
+      --info-bg: linear-gradient(180deg, #24634f 0%, #14382d 50%, #0a211a 100%);
+      --btn-bg: linear-gradient(180deg, #98ff98 0%, #3cb371 100%);
+      --btn-text: #0a211a;
+      --ticker-bg: #14382d;
+    }
+
+    [data-theme="cyberpunk"] {
+      --bg-color: #05051a;
+      --bg-gradient: radial-gradient(circle at 50% 30%, #110038 0%, #05051a 70%), repeating-linear-gradient(45deg, rgba(0, 255, 255, 0.03) 0px, rgba(0, 255, 255, 0.03) 2px, transparent 2px, transparent 8px);
+      --header-bg: linear-gradient(180deg, #120536 0%, #03010f 100%);
+      --border-color: #00ffff;
+      --accent-color: #00ffff;
+      --card-bg: radial-gradient(circle at center, #1b0a4a 0%, #08021c 70%, #020008 100%);
+      --info-bg: linear-gradient(180deg, #150638 0%, #0a021c 50%, #03000a 100%);
+      --btn-bg: linear-gradient(180deg, #00ffff 0%, #008080 100%);
+      --btn-text: #000000;
+      --ticker-bg: #110038;
+    }
+
+    [data-theme="royal"] {
+      --bg-color: #05162b;
+      --bg-gradient: radial-gradient(circle at 50% 30%, #0d2b52 0%, #05162b 70%), repeating-linear-gradient(45deg, rgba(100, 180, 255, 0.05) 0px, rgba(100, 180, 255, 0.05) 2px, transparent 2px, transparent 8px);
+      --header-bg: linear-gradient(180deg, #0f3059 0%, #020b17 100%);
+      --border-color: #4da6ff;
+      --accent-color: #cce6ff;
+      --card-bg: radial-gradient(circle at center, #133a69 0%, #08213d 70%, #020c17 100%);
+      --info-bg: linear-gradient(180deg, #10335e 0%, #071c36 50%, #030b17 100%);
+      --btn-bg: linear-gradient(180deg, #4da6ff 0%, #1a66cc 100%);
+      --btn-text: #ffffff;
+      --ticker-bg: #0d2b52;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: var(--bg-gradient);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: #fff;
+      min-height: 100vh;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s ease;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--header-bg);
+      border: 3px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 24px;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-family: 'Arial Black', Impact, sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--accent-color);
+      text-shadow: 0 3px 8px rgba(0,0,0,0.95);
+      font-style: italic;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .theme-select {
+      background: #ffffff;
+      color: #111111;
+      border: 2px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .manage-btn {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: 2px solid #fff;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+    }
+
+    .manage-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+    /* Breaking News Ticker Bar */
+    .ticker-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--ticker-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+
+    .ticker-badge {
+      background: #e60000;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 8px 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      z-index: 2;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.5);
+    }
+
+    .ticker-content {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .ticker-text {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: tickerAnimation 25s linear infinite;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent-color);
+    }
+
+    @keyframes tickerAnimation {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+      max-width: 1700px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    @media (max-width: 1100px) { .app-layout { grid-template-columns: 1fr; } }
+
+    .player-section { display: flex; flex-direction: column; gap: 15px; }
+
+    .video-card {
+      background: #000;
+      border: 4px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+      position: relative;
+    }
+
+    .video-wrapper { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; }
+    video { width: 100%; height: 100%; object-fit: contain; }
+
+    .live-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #e60000;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 10px;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 5;
+    }
+
+    .live-badge::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: #fff;
+      border-radius: 50%;
+      animation: blink 1s infinite alternate;
+    }
+
+    @keyframes blink { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    .info-box {
+      background: var(--info-bg);
+      border: 3px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+    }
+
+    .info-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+
+    .info-row { font-size: 14px; margin-bottom: 6px; color: #f7d6de; }
+    .info-row span { color: var(--accent-color); font-weight: 600; }
+
+    .status-tag {
+      font-size: 11px;
+      background: rgba(0,0,0,0.5);
+      color: #ffeb3b;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .action-controls-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .top-action-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .action-btn {
+      background: var(--btn-bg);
+      border: 2px solid var(--accent-color);
+      color: var(--btn-text);
+      padding: 9px 5px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+    /* Stream Switch Buttons Container */
+    .stream-switch-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .stream-switch-btn {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      color: #fff;
+      border: 2px solid var(--border-color);
+      padding: 10px 5px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .stream-switch-btn.active-stream {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+      border-color: #fff !important;
+      box-shadow: 0 0 12px #28a745;
+    }
+
+    .stream-switch-btn:disabled {
+      background: #444 !important;
+      color: #888 !important;
+      border-color: #555 !important;
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+      filter: grayscale(100%);
+    }
+
+    .stream-switch-btn:hover:not(:disabled) { filter: brightness(1.2); }
+
+    .channels-section { display: flex; flex-direction: column; gap: 15px; }
+
+    .categories-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: var(--header-bg);
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cat-buttons-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cat-btn {
+      background: var(--info-bg);
+      color: var(--accent-color);
+      border: 1px solid var(--border-color);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cat-btn.active, .cat-btn:hover {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border-color: #fff;
+      box-shadow: 0 0 12px var(--border-color);
+    }
+
+    .view-switcher {
+      display: flex;
+      gap: 5px;
+      background: rgba(0,0,0,0.4);
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .view-btn {
+      background: transparent;
+      color: var(--accent-color);
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .view-btn.active {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+    }
+
+    .channels-grid.mode-card {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 150px);
+      gap: 15px;
+      justify-content: start;
+      min-height: 330px;
+    }
+
+    .channels-grid.mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 330px;
+    }
+
+    .channels-grid.mode-mini {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 100px);
+      gap: 10px;
+      justify-content: start;
+      min-height: 330px;
+    }
+
+    .mode-card .channel-card {
+      width: 150px;
+      height: 150px;
+      background: var(--card-bg);
+      border: 4px solid var(--border-color);
+      border-radius: 14px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 6px 6px 6px;
+      text-align: center;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      overflow: hidden;
+    }
+
+    /* --- HD BADGE DESIGN VARIATIONS --- */
+    .hd-style-ribbon {
+      position: absolute;
+      top: 6px;
+      right: -38px;
+      width: 130px;
+      text-align: center;
+      background: linear-gradient(135deg, #ff0055 0%, #b30000 100%);
+      color: #ffffff;
+      font-weight: normal;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 5px 0;
+      transform: rotate(45deg);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.9), inset 0 1px 1px rgba(255,255,255,0.4);
+      z-index: 6;
+      text-transform: uppercase;
+      text-shadow: 0 1px 2px #000;
+      border-top: 1px solid #ff6699;
+      border-bottom: 1px solid #660000;
+    }
+
+    .hd-style-neon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #00ffff;
+      border: 2px solid #00ffff;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 6px;
+      z-index: 6;
+      box-shadow: 0 0 10px #00ffff;
+      letter-spacing: 1px;
+    }
+
+    .hd-style-gold {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+      color: #1a0500;
+      border: 1px solid #fff;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 900;
+      border-radius: 4px;
+      z-index: 6;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.8);
+      letter-spacing: 1px;
+    }
+
+    .hd-style-glass {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(6px);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 20px;
+      z-index: 6;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    /* Live Event Card Highlight Style */
+    .mode-card .channel-card.is-live-match {
+      border: 4px solid #ff0055 !important;
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.7) !important;
+      animation: livePulse 2s infinite alternate;
+    }
+
+    @keyframes livePulse {
+      0% { border-color: #ff0055; box-shadow: 0 0 10px rgba(255,0,85,0.6); }
+      100% { border-color: #ffcc00; box-shadow: 0 0 20px rgba(255,204,0,0.9); }
+    }
+
+    .live-match-tag {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: #e60000;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 900;
+      padding: 2px 5px;
+      border-radius: 3px;
+      z-index: 5;
+      text-transform: uppercase;
+    }
+
+    .mode-card .channel-card:hover {
+      transform: translateY(-4px) scale(1.03);
+      border-color: #ffffff;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.9), 0 0 18px var(--border-color);
+    }
+
+    .channel-card.active { border-color: #00ffff !important; box-shadow: 0 0 18px #00ffff !important; }
+
+    .card-logo-wrapper { width: 100%; height: 95px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .card-logo { max-width: 92%; max-height: 92%; width: auto; height: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.95)); }
+    .card-text-logo { font-size: 20px; font-weight: 900; color: #ffffff; text-shadow: 0 3px 6px rgba(0,0,0,0.9); line-height: 1.1; }
+
+    .card-name-bar { width: 100%; background: rgba(0, 0, 0, 0.85); padding: 4px 2px; border-radius: 6px; border-top: 1px solid var(--border-color); }
+    .card-name { font-size: 11px; font-weight: bold; color: var(--accent-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .mode-list .channel-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--info-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 15px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .mode-list .channel-card.is-live-match {
+      border-color: #ff0055;
+      background: linear-gradient(90deg, #59111e 0%, #800000 100%);
+    }
+
+    .mode-list .channel-card:hover { background: var(--header-bg); border-color: #fff; }
+    .mode-list .list-left { display: flex; align-items: center; gap: 15px; }
+    .mode-list .list-logo-img { width: 45px; height: 35px; object-fit: contain; }
+    .mode-list .list-channel-title { font-size: 14px; font-weight: bold; color: var(--accent-color); }
+    .mode-list .list-play-btn { background: var(--btn-bg); color: var(--btn-text); font-size: 12px; font-weight: bold; padding: 5px 12px; border-radius: 4px; border: none; }
+
+    .mode-mini .channel-card {
+      width: 100px;
+      height: 100px;
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .mode-mini .card-logo-wrapper { height: 60px; }
+    .mode-mini .card-name { font-size: 9px; }
+
+    .pagination-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--header-bg);
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+      margin-top: 5px;
+    }
+
+    .arrow-btn { background: var(--btn-bg); color: var(--btn-text); border: 1px solid #fff; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+    .arrow-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Admin Modal Styles */
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.88); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+    .modal-box { background: var(--bg-color); border: 3px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 950px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.95); }
+    .modal-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--accent-color); }
+
+    .admin-controls-bar { padding: 12px 15px; background: var(--header-bg); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
+    .search-input, .cat-add-input, .admin-filter-select, .hd-style-select, .mode-select-dropdown { background: var(--bg-color); border: 1px solid var(--border-color); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 13px; width: 100%; outline: none; }
+    .admin-filter-select option, .hd-style-select option, .mode-select-dropdown option { background: #1c0207; color: #fff; }
+
+    .cat-manager-box {
+      background: var(--info-bg);
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cat-manager-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .cat-manage-item {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .cat-action-btn {
+      cursor: pointer;
+      font-size: 10px;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: none;
+      color: #fff;
+    }
+    .cat-action-btn:hover { background: rgba(255,255,255,0.3); }
+
+    .modal-body { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    
+    .channel-input-group { 
+      background: var(--info-bg); 
+      padding: 12px; 
+      border-radius: 8px; 
+      border: 1px solid var(--border-color); 
+      display: grid; 
+      grid-template-columns: 1.1fr 1.2fr; 
+      gap: 15px; 
+      align-items: start;
+    }
+
+    @media (max-width: 768px) { .channel-input-group { grid-template-columns: 1fr; } }
+
+    .edit-col-left { display: flex; flex-direction: column; gap: 8px; }
+    .edit-col-right { display: flex; flex-direction: column; gap: 8px; }
+
+    .slot-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .slot-input { width: 55px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--accent-color); font-weight: bold; padding: 4px 6px; border-radius: 4px; text-align: center; outline: none; }
+    .slot-input:focus { border-color: #00ffff; box-shadow: 0 0 5px #00ffff; }
+    
+    .mode-select-dropdown { width: 90px; padding: 4px; font-size: 11px; font-weight: bold; border-color: var(--border-color); color: #00ffff; }
+
+    .delete-btn { background: #a31c1c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+
+    .admin-field-label { font-size: 11px; font-weight: bold; color: var(--accent-color); margin-bottom: -4px; }
+    .channel-input-group input[type="text"] { background: var(--bg-color); border: 1px solid var(--border-color); color: #fff; padding: 7px; border-radius: 4px; font-size: 12px; width: 100%; }
+
+    .logo-preview-inline { width: 35px; height: 25px; object-fit: contain; border: 1px solid var(--border-color); background: #000; border-radius: 3px; }
+
+    .categories-checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 4px; background: var(--bg-color); padding: 6px; border-radius: 6px; border: 1px solid var(--border-color); max-height: 80px; overflow-y: auto; }
+    .categories-checkbox-group label { font-size: 10px; color: var(--accent-color); display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+    .add-more-btn { background: linear-gradient(180deg, #28a745 0%, #1e7e34 100%); color: white; border: 1px solid #5cb85c; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; margin-top: 5px; }
+    .modal-footer { padding: 12px 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .btn-save { background: var(--btn-bg); color: var(--btn-text); border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-close { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    .json-btn { background: #0275d8; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
+    /* Top Nav Button for Create Lives */
+    .create-lives-btn {
+      background: linear-gradient(135deg, #ff0055 0%, #ff5000 100%);
+      color: #fff;
+      border: 2px solid #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255,0,85,0.6);
+      transition: all 0.2s;
+    }
+    .create-lives-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
+
+    footer { margin-top: auto; text-align: center; padding: 20px 0 10px 0; color: var(--accent-color); font-weight: bold; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-title" id="brandTitle">NXST IPTV - Multi Stream Edition</div>
+    <div class="header-controls">
+      <select id="themeSelector" class="theme-select" onchange="changeTheme(this.value)">
+        <option value="maroon">👑 Luxury Maroon</option>
+        <option value="mint-green">🌱 Mint Green</option>
+        <option value="cyberpunk">⚡ Cyberpunk Neon</option>
+        <option value="royal">🌊 Royal Blue</option>
+      </select>
+      <button class="manage-btn" onclick="openModal()">⚙️ Admin Panel</button>
+    </div>
+  </header>
+
+  <!-- News Ticker Marquee -->
+  <div class="ticker-wrap">
+    <div class="ticker-badge">🔴 NOTICE</div>
+    <div class="ticker-content">
+      <div class="ticker-text" id="displayTickerText">
+        Welcome to NXST IPTV - Multi Stream Edition | Enjoy Uninterrupted Live Streams | Update streams from Admin Panel.
+      </div>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    
+    <div class="player-section">
+      <div class="video-card">
+        <div class="live-badge">LIVE</div>
+        <div class="video-wrapper">
+          <video id="videoPlayer" controls autoplay muted></video>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-title" id="infoChannelName">Select Channel</div>
+        <div class="info-row"><span>Active Stream:</span> <strong id="infoSource" style="color:#fff;">None</strong></div>
+        <div class="info-row"><span>Status:</span> <span class="status-tag" id="streamStatus">Idle</span></div>
+
+        <div class="action-controls-wrapper">
+          <div class="top-action-btns">
+            <button class="action-btn" onclick="toggleFullscreen()">📺 Fullscreen</button>
+            <button class="action-btn" onclick="retryCurrentStream()">🔄 Reload Stream</button>
+          </div>
+
+          <!-- Direct Stream Switching Buttons (Stream 1, Stream 2, Stream 3) -->
+          <div class="stream-switch-container">
+            <button class="stream-switch-btn" id="streamBtn1" onclick="switchStream(1)">Stream 1</button>
+            <button class="stream-switch-btn" id="streamBtn2" onclick="switchStream(2)">Stream 2</button>
+            <button class="stream-switch-btn" id="streamBtn3" onclick="switchStream(3)">Stream 3</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="channels-section">
+      <div class="categories-bar">
+        <div class="cat-buttons-group" id="categoriesBar"></div>
+        <div class="view-switcher">
+          <button class="view-btn active" id="viewCardBtn" onclick="setChannelViewMode('mode-card')" title="Card View">🎴 Card</button>
+          <button class="view-btn" id="viewListBtn" onclick="setChannelViewMode('mode-list')" title="List View">☰ List</button>
+          <button class="view-btn" id="viewMiniBtn" onclick="setChannelViewMode('mode-mini')" title="Mini Grid">📱 Mini</button>
+        </div>
+      </div>
+
+      <div class="channels-container-wrapper">
+        <div class="channels-grid mode-card" id="channelsGrid"></div>
+
+        <div class="pagination-controls" id="paginationControls" style="display: none;">
+          <button class="arrow-btn" id="prevBtn" onclick="changePage(-1)" disabled>◀ Previous</button>
+          <span class="page-info" id="pageIndicator" style="color: var(--accent-color); font-weight:bold; font-size:13px;">Page 1 of 1</span>
+          <button class="arrow-btn" id="nextBtn" onclick="changePage(1)" disabled>Next ▶</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    NXST IPTV © NXST Tech Entertainment || 2026
+  </footer>
+
+  <!-- Main Admin Modal -->
+  <div class="modal-overlay" id="linkModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚙️ Admin Panel - Channel & Settings Control</h3>
+        <span style="cursor:pointer; font-weight:bold;" onclick="closeModal()">✖</span>
+      </div>
+
+      <div class="admin-controls-bar">
+        <!-- Button to open Create Lives Panel -->
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <button class="create-lives-btn" onclick="openLivesModal()">🔥 CREATE LIVES PANEL (Live Cricket / Football)</button>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; background:var(--info-bg); padding:8px 12px; border-radius:6px; border:1px solid var(--border-color);">
+          <span style="font-size:12px; font-weight:bold; color:var(--accent-color); white-space:nowrap;">📢 Edit Ticker Notice:</span>
+          <input type="text" id="tickerInput" class="search-input" style="flex:1;" placeholder="Type scrolling text here...">
+          <button style="background:var(--btn-bg); color:var(--btn-text); border:none; padding:7px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px; white-space:nowrap;" onclick="saveTickerNotice()">💾 Update Ticker</button>
+        </div>
+
+        <!-- Global HD Badge Style Control Box -->
+        <div style="background:var(--info-bg); padding:10px 12px; border-radius:8px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;">
+          <label style="font-size:12px; font-weight:bold; color:var(--accent-color);">🌟 Global HD Badge Style (Change all HD badges instantly):</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="globalHdStyleSelect" class="hd-style-select" style="flex:1;">
+              <option value="ribbon">🔴 Classic Red Corner Ribbon</option>
+              <option value="neon">⚡ Modern Cyan Neon Badge</option>
+              <option value="gold">👑 Golden Luxury Stamp</option>
+              <option value="glass">✨ Dark Glassmorphism Pill</option>
+            </select>
+            <button style="background:var(--btn-bg); color:var(--btn-text); padding:8px 14px; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap; border:none;" onclick="applyGlobalHdStyle()">⚡ Apply to All HD Channels</button>
+          </div>
+        </div>
+
+        <!-- Category Manager Box -->
+        <div class="cat-manager-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-size:12px; font-weight:bold; color:var(--accent-color);">📁 Manage Categories (Edit / Delete):</label>
+          </div>
+          <div class="cat-manager-list" id="adminCatManagerList"></div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <input type="text" id="newCategoryInput" class="cat-add-input" placeholder="New category name (e.g. BANGLADESH)">
+            <button style="background:var(--btn-bg); color:var(--btn-text); padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap; border:none;" onclick="addNewCategory()">➕ Add Category</button>
+          </div>
+        </div>
+
+        <!-- Admin Category Filter & Search Bar -->
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;">
+          <select id="adminCatFilter" class="admin-filter-select" onchange="renderModalInputs()">
+          </select>
+          <input type="text" id="adminSearchInput" class="search-input" placeholder="🔍 Search channel name..." oninput="renderModalInputs()">
+        </div>
+      </div>
+
+      <div class="modal-body" id="modalInputs"></div>
+
+      <div style="padding: 0 15px;">
+        <button class="add-more-btn" onclick="addNewSlot()">➕ Add New Channel Slot in Selected Category</button>
+      </div>
+
+      <div class="modal-footer">
+        <div>
+          <button class="json-btn" onclick="exportJSONBackup()">📥 Export JSON</button>
+          <button class="json-btn" onclick="document.getElementById('importFile').click()">📤 Import JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSONBackup(event)">
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-close" onclick="closeModal()">Cancel</button>
+          <button class="btn-save" onclick="saveChannels()">Save & Apply Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fresh Sub-Panel: Create Lives Panel -->
+  <div class="modal-overlay" id="livesModal" style="z-index: 1050;">
+    <div class="modal-box" style="max-width: 800px;">
+      <div class="modal-header" style="background: linear-gradient(90deg, #800000 0%, #2b050d 100%);">
+        <h3>🔥 Create Lives Panel (Add Live Cricket / Football Event Links)</h3>
+        <span style="cursor:pointer; font-weight:bold;" onclick="closeLivesModal()">✖</span>
+      </div>
+
+      <div class="admin-controls-bar">
+        <p style="font-size:12px; color:var(--accent-color);">
+          📌 এখানে অ্যাড করা সবকটি লাইভ ইভেন্ট (Live 1, Live 2, Live 3...) সরাসরি মূল চ্যানেলের <strong>সবার শুরুতে</strong> অটোমেটিক পিন হয়ে দেখাবে।
+        </p>
+      </div>
+
+      <div class="modal-body" id="livesModalInputs"></div>
+
+      <div style="padding: 0 15px;">
+        <button class="add-more-btn" style="background: linear-gradient(180deg, #ff0055 0%, #a30036 100%); border-color: #ff3377;" onclick="addNewLiveSlot()">➕ Add New Live Match (Live 1, Live 2...)</button>
+      </div>
+
+      <div class="modal-footer">
+        <div></div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-close" onclick="closeLivesModal()">Cancel</button>
+          <button class="btn-save" style="background: linear-gradient(180deg, #ff0055 0%, #990033 100%); color:#fff;" onclick="saveLiveMatches()">💾 Save Live Matches</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data Setup
+    const defaultCategories = ['SPORTS', 'NEWS', 'BANGLA', 'BANGLADESH', 'HINDI', 'MOVIES', 'MUSIC'];
+    let allCategories = JSON.parse(localStorage.getItem('nightwave_categories')) || defaultCategories;
+
+    let defaultUnifiedChannels = [
+      { 
+        id: 1, slot: 1, name: 'T SPORTS', categories: ['SPORTS'], isHd: true, hdStyle: 'ribbon',
+        stream1: '', stream2: '', stream3: '', 
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/T_Sports_logo.svg', textLogo: 'T SPORTS' 
+      },
+      { 
+        id: 2, slot: 2, name: 'Star Sports 1', categories: ['SPORTS'], isHd: false, hdStyle: 'ribbon',
+        stream1: '', stream2: '', stream3: '', 
+        logo: 'https://i.postimg.cc/brsfp7HT/st1s.png', textLogo: 'SS1' 
+      }
+    ];
+
+    let defaultTickerNotice = "Welcome to NXST IPTV - Multi Stream Edition | Enjoy Uninterrupted Live Streams | Update streams from Admin Panel.";
+
+    let unifiedChannels = JSON.parse(localStorage.getItem('nxst_multi_channels')) || defaultUnifiedChannels;
+    let liveMatches = JSON.parse(localStorage.getItem('nxst_live_matches')) || [];
+    let currentTickerNotice = localStorage.getItem('nxst_ticker_text') || defaultTickerNotice;
+    let activeViewMode = localStorage.getItem('nxst_view_mode') || 'mode-card';
+
+    let currentCategory = allCategories.length > 0 ? allCategories[0] : 'SPORTS';
+    let currentActiveChannel = null;
+    let currentActiveStreamIndex = 1;
+    let currentPage = 1;
+    const itemsPerPage = 20;
+
+    const video = document.getElementById('videoPlayer');
+    let hls = new Hls();
+
+    // --- AUTO-LOAD FROM channels.json (GITHUB HOSTING SUPPORT) ---
+    async function loadInitialDataFromJSON() {
+      const savedChannels = localStorage.getItem('nxst_multi_channels');
+      if (!savedChannels || JSON.parse(savedChannels).length === 0) {
+        try {
+          let response = await fetch('channels.json');
+          if (response.ok) {
+            let data = await response.json();
+            if (data.unifiedChannels) {
+              unifiedChannels = data.unifiedChannels;
+              localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+            }
+            if (data.categories) {
+              allCategories = data.categories;
+              localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+            }
+            if (data.liveMatches) {
+              liveMatches = data.liveMatches;
+              localStorage.setItem('nxst_live_matches', JSON.stringify(liveMatches));
+            }
+            if (data.tickerNotice) {
+              currentTickerNotice = data.tickerNotice;
+              localStorage.setItem('nxst_ticker_text', currentTickerNotice);
+            }
+            applyTickerText();
+            renderCategoryButtons();
+            renderChannels();
+            console.log('Auto-loaded from channels.json successfully!');
+          }
+        } catch (e) {
+          console.log('Could not fetch channels.json automatically', e);
+        }
+      }
+    }
+
+    function applyTickerText() {
+      document.getElementById('displayTickerText').innerText = currentTickerNotice;
+      document.getElementById('tickerInput').value = currentTickerNotice;
+    }
+
+    function saveTickerNotice() {
+      const val = document.getElementById('tickerInput').value.trim();
+      if (val) {
+        currentTickerNotice = val;
+        localStorage.setItem('nxst_ticker_text', currentTickerNotice);
+        applyTickerText();
+        alert('টিক্যার নোটিশ সফলভাবে আপডেট করা হয়েছে!');
+      }
+    }
+
+    function applyGlobalHdStyle() {
+      const globalStyle = document.getElementById('globalHdStyleSelect').value;
+      
+      syncCurrentModalInputs();
+      unifiedChannels.forEach(ch => {
+        if (ch.isHd) {
+          ch.hdStyle = globalStyle;
+        }
+      });
+
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+      renderModalInputs();
+      renderChannels();
+      alert('সফলভাবে সমস্ত HD চ্যানেলের স্টাইল আপডেট করা হয়েছে!');
+    }
+
+    function setChannelViewMode(mode) {
+      activeViewMode = mode;
+      localStorage.setItem('nxst_view_mode', mode);
+
+      const grid = document.getElementById('channelsGrid');
+      grid.className = `channels-grid ${mode}`;
+
+      document.getElementById('viewCardBtn').classList.toggle('active', mode === 'mode-card');
+      document.getElementById('viewListBtn').classList.toggle('active', mode === 'mode-list');
+      document.getElementById('viewMiniBtn').classList.toggle('active', mode === 'mode-mini');
+
+      renderChannels();
+    }
+
+    function changeTheme(themeName) {
+      if (themeName === 'maroon') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem('nightwave_theme', themeName);
+    }
+
+    const savedTheme = localStorage.getItem('nightwave_theme') || 'maroon';
+    document.getElementById('themeSelector').value = savedTheme;
+    changeTheme(savedTheme);
+
+    function getCombinedChannelList() {
+      let sortedRegular = [...unifiedChannels].sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+      return [...liveMatches, ...sortedRegular];
+    }
+
+    function renderCategoryButtons() {
+      const bar = document.getElementById('categoriesBar');
+      bar.innerHTML = '';
+
+      if (!allCategories.includes(currentCategory)) {
+        currentCategory = allCategories.length > 0 ? allCategories[0] : '';
+      }
+
+      allCategories.forEach(cat => {
+        const isActive = currentCategory === cat ? 'active' : '';
+        bar.innerHTML += `<button class="cat-btn ${isActive}" onclick="filterCategory('${cat}')">${cat}</button>`;
+      });
+    }
+
+    function renderChannels() {
+      const grid = document.getElementById('channelsGrid');
+      grid.innerHTML = '';
+
+      let combinedList = getCombinedChannelList();
+      let filtered = combinedList.filter(c => c.isLive || (c.categories && c.categories.includes(currentCategory)));
+
+      const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedChannels = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+      paginatedChannels.forEach(ch => {
+        const card = document.createElement('div');
+        const isActive = currentActiveChannel && ch.id === currentActiveChannel.id;
+        card.className = `channel-card ${isActive ? 'active' : ''} ${ch.isLive ? 'is-live-match' : ''}`;
+        card.onclick = () => {
+          let firstStream = 1;
+          if (ch.stream1 && ch.stream1.trim() !== '') firstStream = 1;
+          else if (ch.stream2 && ch.stream2.trim() !== '') firstStream = 2;
+          else if (ch.stream3 && ch.stream3.trim() !== '') firstStream = 3;
+          playChannel(ch, firstStream);
+        };
+
+        let liveBadgeHTML = ch.isLive ? `<div class="live-match-tag">🔴 LIVE</div>` : '';
+
+        let hdBadgeHTML = '';
+        if (ch.isHd) {
+          let styleType = ch.hdStyle || 'ribbon';
+          if (styleType === 'ribbon') {
+            hdBadgeHTML = `<div class="hd-style-ribbon">HD</div>`;
+          } else if (styleType === 'neon') {
+            hdBadgeHTML = `<div class="hd-style-neon">HD</div>`;
+          } else if (styleType === 'gold') {
+            hdBadgeHTML = `<div class="hd-style-gold">HD</div>`;
+          } else if (styleType === 'glass') {
+            hdBadgeHTML = `<div class="hd-style-glass">HD</div>`;
+          }
+        }
+
+        if (activeViewMode === 'mode-list') {
+          let logoSrc = ch.logo ? `<img src="${ch.logo}" class="list-logo-img" alt="${ch.name}">` : `<span style="font-weight:900; color:var(--accent-color); font-size:16px;">${ch.textLogo || 'LIVE'}</span>`;
+          card.innerHTML = `
+            <div class="list-left">
+              ${logoSrc}
+              <div class="list-channel-title">
+                ${ch.name} 
+                ${ch.isLive ? '<span style="color:#ff0055; font-size:11px;">[LIVE MATCH]</span>' : ''}
+                ${ch.isHd ? '<span style="background:#ff0055; color:#fff; font-size:9px; padding:2px 5px; border-radius:3px; margin-left:5px; font-weight:normal;">HD</span>' : ''}
+              </div>
+            </div>
+            <button class="list-play-btn">▶ PLAY</button>
+          `;
+        } else {
+          let logoContent = ch.logo 
+            ? `<div class="card-logo-wrapper"><img src="${ch.logo}" class="card-logo" alt="${ch.name}"></div>` 
+            : `<div class="card-logo-wrapper"><div class="card-text-logo">${ch.textLogo || ch.name}</div></div>`;
+
+          card.innerHTML = `
+            ${liveBadgeHTML}
+            ${hdBadgeHTML}
+            ${logoContent}
+            <div class="card-name-bar">
+              <div class="card-name">${ch.name}</div>
+            </div>
+          `;
+        }
+
+        grid.appendChild(card);
+      });
+
+      document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prevBtn').disabled = (currentPage === 1);
+      document.getElementById('nextBtn').disabled = (currentPage === totalPages);
+
+      const navControls = document.getElementById('paginationControls');
+      navControls.style.display = (filtered.length <= itemsPerPage) ? 'none' : 'flex';
+    }
+
+    function changePage(direction) {
+      currentPage += direction;
+      renderChannels();
+    }
+
+    function playChannel(ch, streamNum = 1) {
+      currentActiveChannel = ch;
+      
+      let targetUrl = '';
+      if (streamNum === 1) targetUrl = ch.stream1;
+      else if (streamNum === 2) targetUrl = ch.stream2;
+      else if (streamNum === 3) targetUrl = ch.stream3;
+
+      if (!targetUrl || targetUrl.trim() === '') {
+        if (ch.stream1 && ch.stream1.trim() !== '') { streamNum = 1; targetUrl = ch.stream1; }
+        else if (ch.stream2 && ch.stream2.trim() !== '') { streamNum = 2; targetUrl = ch.stream2; }
+        else if (ch.stream3 && ch.stream3.trim() !== '') { streamNum = 3; targetUrl = ch.stream3; }
+      }
+
+      currentActiveStreamIndex = streamNum;
+      document.getElementById('infoChannelName').innerText = ch.name;
+      renderChannels();
+      updateStreamButtonsUI();
+
+      if (targetUrl && targetUrl.trim() !== '') {
+        document.getElementById('infoSource').innerText = `${ch.name} (Stream ${streamNum})`;
+        document.getElementById('streamStatus').innerText = `🟢 Playing Stream ${streamNum}`;
+        document.getElementById('streamStatus').style.background = '#388e3c';
+        executeStreamUrl(targetUrl.trim(), streamNum);
+      } else {
+        document.getElementById('infoSource').innerText = 'No Stream Available';
+        document.getElementById('streamStatus').innerText = '❌ No Link Provided';
+        document.getElementById('streamStatus').style.background = '#d32f2f';
+        if (Hls.isSupported()) hls.destroy();
+        video.src = '';
+      }
+    }
+
+    function switchStream(streamNum) {
+      if (!currentActiveChannel) {
+        alert('আগে যেকোনো একটি চ্যানেল সিলেক্ট করুন!');
+        return;
+      }
+      
+      let url = '';
+      if (streamNum === 1) url = currentActiveChannel.stream1;
+      else if (streamNum === 2) url = currentActiveChannel.stream2;
+      else if (streamNum === 3) url = currentActiveChannel.stream3;
+
+      if (!url || url.trim() === '') return;
+
+      playChannel(currentActiveChannel, streamNum);
+    }
+
+    function retryCurrentStream() {
+      if (currentActiveChannel) {
+        playChannel(currentActiveChannel, currentActiveStreamIndex);
+      }
+    }
+
+    function updateStreamButtonsUI() {
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`streamBtn${i}`);
+        if (btn && currentActiveChannel) {
+          let link = '';
+          if (i === 1) link = currentActiveChannel.stream1;
+          else if (i === 2) link = currentActiveChannel.stream2;
+          else if (i === 3) link = currentActiveChannel.stream3;
+
+          const hasLink = link && link.trim() !== '';
+          btn.disabled = !hasLink;
+          btn.classList.toggle('active-stream', i === currentActiveStreamIndex && hasLink);
+        }
+      }
+    }
+
+    function executeStreamUrl(streamUrl, streamNum) {
+      if (Hls.isSupported()) {
+        hls.destroy();
+        hls = new Hls({
+          manifestLoadingTimeOut: 7000,
+          levelLoadingTimeOut: 7000,
+          fragLoadingTimeOut: 7000
+        });
+
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          document.getElementById('streamStatus').innerText = `🟢 Streaming Stream ${streamNum}`;
+          document.getElementById('streamStatus').style.background = '#388e3c';
+          video.play().catch(e => console.log('Autoplay:', e));
+        });
+
+        hls.on(Hls.Events.ERROR, (evt, data) => {
+          if (data.fatal) {
+            console.warn(`Stream ${streamNum} failed. Attempting auto switch...`);
+            autoSwitchToNextStream(streamNum);
+          }
+        });
+
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+        video.onerror = () => {
+          autoSwitchToNextStream(streamNum);
+        };
+        video.play();
+      }
+    }
+
+    function autoSwitchToNextStream(failedStreamNum) {
+      if (!currentActiveChannel) return;
+      
+      let candidateStreams = [];
+      if (currentActiveChannel.stream1 && currentActiveChannel.stream1.trim() !== '') candidateStreams.push(1);
+      if (currentActiveChannel.stream2 && currentActiveChannel.stream2.trim() !== '') candidateStreams.push(2);
+      if (currentActiveChannel.stream3 && currentActiveChannel.stream3.trim() !== '') candidateStreams.push(3);
+
+      if (candidateStreams.length <= 1) return;
+
+      let currentIndex = candidateStreams.indexOf(failedStreamNum);
+      let nextIndex = (currentIndex + 1) % candidateStreams.length;
+      let nextStreamNum = candidateStreams[nextIndex];
+
+      document.getElementById('streamStatus').innerText = `⚡ Auto-switching to Stream ${nextStreamNum}...`;
+      document.getElementById('streamStatus').style.background = '#ff9800';
+      
+      setTimeout(() => {
+        playChannel(currentActiveChannel, nextStreamNum);
+      }, 1500);
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      currentPage = 1;
+      renderCategoryButtons();
+      renderChannels();
+    }
+
+    function toggleFullscreen() {
+      if (video.requestFullscreen) video.requestFullscreen();
+      else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+    }
+
+    function openModal() {
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+      document.getElementById('linkModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('linkModal').style.display = 'none';
+    }
+
+    function populateAdminCategoryFilter() {
+      const select = document.getElementById('adminCatFilter');
+      const currentSelected = select.value;
+      
+      select.innerHTML = '';
+      allCategories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+
+      if (currentSelected && allCategories.includes(currentSelected)) {
+        select.value = currentSelected;
+      } else if (allCategories.length > 0) {
+        select.value = allCategories[0];
+      }
+    }
+
+    // --- CREATE LIVES SUB-PANEL LOGIC ---
+    function openLivesModal() {
+      renderLivesModalInputs();
+      document.getElementById('livesModal').style.display = 'flex';
+    }
+
+    function closeLivesModal() {
+      document.getElementById('livesModal').style.display = 'none';
+    }
+
+    function renderLivesModalInputs() {
+      const container = document.getElementById('livesModalInputs');
+      container.innerHTML = '';
+
+      if (liveMatches.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:#aaa; font-size:13px;">বর্তমানে কোনো লাইভ ইভেন্ট স্লট নেই। নিচের বাটনে ক্লিক করে নতুন লাইভ ইভেন্ট যোগ করুন।</div>`;
+        return;
+      }
+
+      liveMatches.forEach((match, index) => {
+        const group = document.createElement('div');
+        group.className = 'channel-input-group';
+        group.style.borderColor = '#ff0055';
+
+        let logoPreview = match.logo ? `<img src="${match.logo}" class="logo-preview-inline" alt="preview">` : `<span style="font-size:10px; color:#aaa;">No Logo</span>`;
+
+        group.innerHTML = `
+          <div class="edit-col-left">
+            <div class="slot-row">
+              <span style="font-size:13px; font-weight:900; color:#ff0055;">🔥 Live #${index + 1}</span>
+              <button class="delete-btn" onclick="removeLiveSlot(${match.id})">🗑️ Delete Live</button>
+            </div>
+            
+            <div>
+              <span class="admin-field-label">Live Event Title:</span>
+              <input type="text" id="live_name_${match.id}" value="${match.name}" placeholder="e.g. LIVE 1 - BAN vs IND">
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="admin-field-label">Banner / Logo URL:</span>
+                ${logoPreview}
+              </div>
+              <input type="text" id="live_logo_${match.id}" value="${match.logo || ''}" placeholder="Image URL (PNG/JPG)">
+            </div>
+          </div>
+
+          <div class="edit-col-right">
+            <div>
+              <span class="admin-field-label" style="color:#2ecc71;">🔗 Live Stream 1:</span>
+              <input type="text" id="live_stream1_${match.id}" value="${match.stream1 || ''}" placeholder="https://.../live1.m3u8">
+            </div>
+
+            <div>
+              <span class="admin-field-label" style="color:#3498db;">🔗 Live Stream 2:</span>
+              <input type="text" id="live_stream2_${match.id}" value="${match.stream2 || ''}" placeholder="https://.../live2.m3u8">
+            </div>
+
+            <div>
+              <span class="admin-field-label" style="color:#e67e22;">🔗 Live Stream 3:</span>
+              <input type="text" id="live_stream3_${match.id}" value="${match.stream3 || ''}" placeholder="https://.../live3.m3u8">
+            </div>
+          </div>
+        `;
+        container.appendChild(group);
+      });
+    }
+
+    function addNewLiveSlot() {
+      syncCurrentLivesInputs();
+      const newId = Date.now();
+      const liveCount = liveMatches.length + 1;
+
+      liveMatches.push({
+        id: newId,
+        isLive: true,
+        name: `Live ${liveCount}`,
+        logo: '',
+        textLogo: `LIVE ${liveCount}`,
+        stream1: '',
+        stream2: '',
+        stream3: ''
+      });
+
+      renderLivesModalInputs();
+      const body = document.getElementById('livesModalInputs');
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function removeLiveSlot(id) {
+      syncCurrentLivesInputs();
+      liveMatches = liveMatches.filter(m => m.id !== id);
+      renderLivesModalInputs();
+    }
+
+    function syncCurrentLivesInputs() {
+      liveMatches.forEach(m => {
+        const nameInput = document.getElementById(`live_name_${m.id}`);
+        const logoInput = document.getElementById(`live_logo_${m.id}`);
+        const s1Input = document.getElementById(`live_stream1_${m.id}`);
+        const s2Input = document.getElementById(`live_stream2_${m.id}`);
+        const s3Input = document.getElementById(`live_stream3_${m.id}`);
+
+        if (nameInput) m.name = nameInput.value;
+        if (logoInput) m.logo = logoInput.value;
+        if (s1Input) m.stream1 = s1Input.value;
+        if (s2Input) m.stream2 = s2Input.value;
+        if (s3Input) m.stream3 = s3Input.value;
+      });
+    }
+
+    function saveLiveMatches() {
+      syncCurrentLivesInputs();
+      localStorage.setItem('nxst_live_matches', JSON.stringify(liveMatches));
+      closeLivesModal();
+      renderChannels();
+      alert('সফলভাবে সমস্ত লাইভ ইভেন্ট সেভ করা হয়েছে!');
+    }
+
+    // Category Manager
+    function renderCategoryManagerList() {
+      const container = document.getElementById('adminCatManagerList');
+      container.innerHTML = '';
+
+      allCategories.forEach((cat) => {
+        const item = document.createElement('div');
+        item.className = 'cat-manage-item';
+        item.innerHTML = `
+          <span>${cat}</span>
+          <button class="cat-action-btn" onclick="editCategoryName('${cat}')">✏️ Edit</button>
+          <button class="cat-action-btn" style="color:#ff6b6b;" onclick="deleteCategory('${cat}')">🗑️ Delete</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function editCategoryName(oldCat) {
+      const newCat = prompt(`"${oldCat}" ক্যাটাগরির নতুন নাম লিখুন:`, oldCat);
+      if (!newCat || newCat.trim() === '' || newCat.trim().toUpperCase() === oldCat) return;
+
+      const formattedNew = newCat.trim().toUpperCase();
+      if (allCategories.includes(formattedNew)) {
+        alert('এই নামের ক্যাটাগরি ইতিমধ্যে রয়েছে!');
+        return;
+      }
+
+      syncCurrentModalInputs();
+      const index = allCategories.indexOf(oldCat);
+      if (index !== -1) allCategories[index] = formattedNew;
+
+      unifiedChannels.forEach(ch => {
+        if (ch.categories && ch.categories.includes(oldCat)) {
+          const idx = ch.categories.indexOf(oldCat);
+          ch.categories[idx] = formattedNew;
+        }
+      });
+
+      localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+
+      if (currentCategory === oldCat) currentCategory = formattedNew;
+
+      renderCategoryButtons();
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+    }
+
+    function deleteCategory(catToDelete) {
+      if (!confirm(`আপনি কি সত্যি "${catToDelete}" ক্যাটাগরি সম্পূর্ণ মুছে ফেলতে চান?`)) return;
+
+      syncCurrentModalInputs();
+      allCategories = allCategories.filter(c => c !== catToDelete);
+
+      unifiedChannels.forEach(ch => {
+        if (ch.categories) ch.categories = ch.categories.filter(c => c !== catToDelete);
+      });
+
+      localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+
+      currentCategory = allCategories.length > 0 ? allCategories[0] : '';
+
+      renderCategoryButtons();
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+    }
+
+    function addNewCategory() {
+      const input = document.getElementById('newCategoryInput');
+      const catName = input.value.trim().toUpperCase();
+
+      if (!catName) { alert('ক্যাটাগরির নাম লিখুন!'); return; }
+      if (allCategories.includes(catName)) { alert('এই ক্যাটাগরি ইতিমধ্যে রয়েছে!'); return; }
+
+      syncCurrentModalInputs();
+      allCategories.push(catName);
+      localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+      input.value = '';
+      
+      renderCategoryButtons();
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+    }
+
+    // --- DYNAMIC SHIFT OR SWITCH LOGIC ---
+    function syncCurrentModalInputs() {
+      const selectedAdminCat = document.getElementById('adminCatFilter')?.value || (allCategories.length > 0 ? allCategories[0] : 'SPORTS');
+      
+      let categoryChannels = unifiedChannels.filter(c => c.categories && c.categories.includes(selectedAdminCat));
+      categoryChannels.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+
+      categoryChannels.forEach((ch) => {
+        const slotInput = document.getElementById(`slot_${ch.id}`);
+        const modeInput = document.getElementById(`mode_${ch.id}`);
+        const nameInput = document.getElementById(`name_${ch.id}`);
+        const logoInput = document.getElementById(`logo_${ch.id}`);
+        const s1Input = document.getElementById(`stream1_${ch.id}`);
+        const s2Input = document.getElementById(`stream2_${ch.id}`);
+        const s3Input = document.getElementById(`stream3_${ch.id}`);
+        const hdCheckbox = document.getElementById(`isHd_${ch.id}`);
+        const hdStyleSelect = document.getElementById(`hdStyle_${ch.id}`);
+
+        const selectedCats = [];
+        const checkboxes = document.querySelectorAll(`.cat_checkbox_${ch.id}:checked`);
+        checkboxes.forEach(cb => selectedCats.push(cb.value));
+
+        if (nameInput) ch.name = nameInput.value;
+        if (logoInput) ch.logo = logoInput.value;
+        if (s1Input) ch.stream1 = s1Input.value;
+        if (s2Input) ch.stream2 = s2Input.value;
+        if (s3Input) ch.stream3 = s3Input.value;
+        if (hdCheckbox) ch.isHd = hdCheckbox.checked;
+        if (hdStyleSelect) ch.hdStyle = hdStyleSelect.value;
+        if (selectedCats.length > 0) ch.categories = selectedCats;
+
+        let targetSlot = slotInput ? parseInt(slotInput.value) : ch.slot;
+        if (isNaN(targetSlot) || targetSlot < 1) targetSlot = 1;
+
+        ch.newTargetSlot = targetSlot;
+        ch.actionMode = modeInput ? modeInput.value : 'shift';
+      });
+
+      categoryChannels.forEach(ch => {
+        let oldSlot = ch.slot;
+        let newSlot = ch.newTargetSlot;
+
+        if (oldSlot !== newSlot) {
+          if (ch.actionMode === 'switch') {
+            let targetChannel = categoryChannels.find(c => c.slot === newSlot && c.id !== ch.id);
+            if (targetChannel) {
+              targetChannel.slot = oldSlot;
+              targetChannel.newTargetSlot = oldSlot;
+            }
+            ch.slot = newSlot;
+          } else {
+            categoryChannels = categoryChannels.filter(c => c.id !== ch.id);
+            let insertIndex = Math.max(0, Math.min(newSlot - 1, categoryChannels.length));
+            categoryChannels.splice(insertIndex, 0, ch);
+
+            categoryChannels.forEach((c, idx) => {
+              c.slot = idx + 1;
+              c.newTargetSlot = c.slot;
+            });
+          }
+        }
+      });
+
+      categoryChannels.forEach(ch => {
+        delete ch.newTargetSlot;
+        delete ch.actionMode;
+      });
+
+      unifiedChannels.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+    }
+
+    function renderModalInputs() {
+      const container = document.getElementById('modalInputs');
+      const searchQuery = (document.getElementById('adminSearchInput')?.value || '').toLowerCase().trim();
+      const selectedAdminCat = document.getElementById('adminCatFilter')?.value || (allCategories.length > 0 ? allCategories[0] : '');
+      
+      let activeList = unifiedChannels.filter(ch => ch.categories && ch.categories.includes(selectedAdminCat));
+      activeList.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+
+      container.innerHTML = '';
+
+      if (activeList.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:#aaa; font-size:13px;">"${selectedAdminCat}" ক্যাটাগরিতে কোনো চ্যানেল নেই। নতুন চ্যানেল যোগ করতে নিচের বাটনে ক্লিক করুন।</div>`;
+        return;
+      }
+
+      activeList.forEach((ch) => {
+        if (!ch.categories) ch.categories = [];
+        if (searchQuery && !ch.name.toLowerCase().includes(searchQuery)) return;
+
+        const group = document.createElement('div');
+        group.className = 'channel-input-group';
+        group.id = `group_${ch.id}`;
+
+        let checkboxesHTML = '';
+        allCategories.forEach(cat => {
+          const isChecked = ch.categories.includes(cat) ? 'checked' : '';
+          checkboxesHTML += `<label><input type="checkbox" class="cat_checkbox_${ch.id}" value="${cat}" ${isChecked}> ${cat}</label>`;
+        });
+
+        let logoPreview = ch.logo ? `<img src="${ch.logo}" class="logo-preview-inline" alt="preview">` : `<span style="font-size:10px; color:#aaa;">No Logo</span>`;
+        let hdChecked = ch.isHd ? 'checked' : '';
+        let currentHdStyle = ch.hdStyle || 'ribbon';
+
+        group.innerHTML = `
+          <div class="edit-col-left">
+            <div class="slot-row">
+              <div style="display:flex; align-items:center; gap:5px;">
+                <span class="admin-field-label">Slot #:</span>
+                <input type="number" id="slot_${ch.id}" class="slot-input" value="${ch.slot || 1}">
+                <select id="mode_${ch.id}" class="mode-select-dropdown" title="Choose Shift or Switch">
+                  <option value="shift">↕️ Shift</option>
+                  <option value="switch">🔀 Switch</option>
+                </select>
+              </div>
+              <button class="delete-btn" onclick="removeSlot(${ch.id})">🗑️ Delete</button>
+            </div>
+            
+            <div>
+              <span class="admin-field-label">Channel Name:</span>
+              <input type="text" id="name_${ch.id}" value="${ch.name}" placeholder="Channel Name">
+            </div>
+
+            <!-- HD Toggle & Style Selection -->
+            <div style="background: rgba(255, 0, 85, 0.15); padding: 8px; border-radius: 6px; border: 1px solid #ff0055; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="isHd_${ch.id}" ${hdChecked} style="width:16px; height:16px; cursor:pointer;">
+                <label for="isHd_${ch.id}" style="font-size:12px; font-weight:bold; color:#ff3377; cursor:pointer;">🚩 Enable High Definition (HD Badge)</label>
+              </div>
+              <div>
+                <span class="admin-field-label" style="font-size:10px;">Select HD Badge Design Style:</span>
+                <select id="hdStyle_${ch.id}" class="hd-style-select">
+                  <option value="ribbon" ${currentHdStyle === 'ribbon' ? 'selected' : ''}>🔴 Classic Red Corner Ribbon</option>
+                  <option value="neon" ${currentHdStyle === 'neon' ? 'selected' : ''}>⚡ Modern Cyan Neon Badge</option>
+                  <option value="gold" ${currentHdStyle === 'gold' ? 'selected' : ''}>👑 Golden Luxury Stamp</option>
+                  <option value="glass" ${currentHdStyle === 'glass' ? 'selected' : ''}>✨ Dark Glassmorphism Pill</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="admin-field-label">Logo Image URL:</span>
+                ${logoPreview}
+              </div>
+              <input type="text" id="logo_${ch.id}" value="${ch.logo || ''}" placeholder="Image URL (PNG/SVG)">
+            </div>
+
+            <div>
+              <span class="admin-field-label">Categories:</span>
+              <div class="categories-checkbox-group">${checkboxesHTML}</div>
+            </div>
+          </div>
+
+          <div class="edit-col-right">
+            <div>
+              <span class="admin-field-label" style="color:#2ecc71;">🔗 Stream 1 (Primary Link):</span>
+              <input type="text" id="stream1_${ch.id}" value="${ch.stream1 || ''}" placeholder="https://.../stream1.m3u8">
+            </div>
+
+            <div>
+              <span class="admin-field-label" style="color:#3498db;">🔗 Stream 2 (Backup 1):</span>
+              <input type="text" id="stream2_${ch.id}" value="${ch.stream2 || ''}" placeholder="https://.../stream2.m3u8">
+            </div>
+
+            <div>
+              <span class="admin-field-label" style="color:#e67e22;">🔗 Stream 3 (Backup 2):</span>
+              <input type="text" id="stream3_${ch.id}" value="${ch.stream3 || ''}" placeholder="https://.../stream3.m3u8">
+            </div>
+          </div>
+        `;
+        container.appendChild(group);
+      });
+    }
+
+    function addNewSlot() {
+      syncCurrentModalInputs();
+      const newId = Date.now();
+      const selectedAdminCat = document.getElementById('adminCatFilter')?.value || (allCategories.length > 0 ? allCategories[0] : 'SPORTS');
+
+      const catChannels = unifiedChannels.filter(c => c.categories && c.categories.includes(selectedAdminCat));
+      const nextSlot = catChannels.length > 0 ? Math.max(...catChannels.map(c => Number(c.slot) || 0)) + 1 : 1;
+
+      unifiedChannels.push({ 
+        id: newId, 
+        slot: nextSlot, 
+        name: `Channel ${nextSlot}`, 
+        categories: [selectedAdminCat], 
+        isHd: false,
+        hdStyle: document.getElementById('globalHdStyleSelect')?.value || 'ribbon',
+        stream1: '', stream2: '', stream3: '', 
+        logo: '', textLogo: 'TV' 
+      });
+
+      renderModalInputs();
+      const body = document.getElementById('modalInputs');
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function removeSlot(id) {
+      syncCurrentModalInputs();
+      unifiedChannels = unifiedChannels.filter(c => c.id !== id);
+      
+      allCategories.forEach(cat => {
+        let catChs = unifiedChannels.filter(c => c.categories && c.categories.includes(cat));
+        catChs.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+        catChs.forEach((c, idx) => c.slot = idx + 1);
+      });
+
+      renderModalInputs();
+    }
+
+    function saveChannels() {
+      syncCurrentModalInputs();
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+      closeModal();
+      renderChannels();
+      alert('সফলভাবে সমস্ত চ্যানেল ও স্লটের পরিবর্তন সেভ করা হয়েছে!');
+    }
+
+    function exportJSONBackup() {
+      syncCurrentModalInputs();
+      syncCurrentLivesInputs();
+      const data = { 
+        categories: allCategories, 
+        unifiedChannels: unifiedChannels, 
+        liveMatches: liveMatches,
+        tickerNotice: currentTickerNotice
+      };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "channels.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSONBackup(event) {
+      const fileReader = new FileReader();
+      fileReader.onload = function (e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.categories) { allCategories = parsed.categories; localStorage.setItem('nightwave_categories', JSON.stringify(allCategories)); }
+          if (parsed.unifiedChannels) { unifiedChannels = parsed.unifiedChannels; localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels)); }
+          if (parsed.liveMatches) { liveMatches = parsed.liveMatches; localStorage.setItem('nxst_live_matches', JSON.stringify(liveMatches)); }
+          if (parsed.tickerNotice) { currentTickerNotice = parsed.tickerNotice; localStorage.setItem('nxst_ticker_text', currentTickerNotice); applyTickerText(); }
+
+          renderCategoryButtons();
+          renderChannels();
+          renderCategoryManagerList();
+          populateAdminCategoryFilter();
+          renderModalInputs();
+          alert('সফলভাবে ব্যাকআপ রিস্টোর করা হয়েছে!');
+        } catch (err) {
+          alert('ভুল ফাইল ফরম্যাট!');
+        }
+      };
+      fileReader.readAsText(event.target.files[0]);
+    }
+
+    // Initial Load & Auto-load execution
+    applyTickerText();
+    setChannelViewMode(activeViewMode);
+    renderCategoryButtons();
+    renderChannels();
+    
+    // Auto-fetch from channels.json if local storage is empty
+    loadInitialDataFromJSON();
+  </script>
+</body>
+</html>
