@@ -43,7 +43,7 @@
 
         <!-- Channels Grid -->
         <div id="channels-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- Dynamic Channels Will Load Here -->
+            <!-- Channels Will Load Dynamically -->
         </div>
     </main>
 
@@ -70,22 +70,24 @@
     <!-- Footer -->
     <footer class="glass py-4 text-center text-sm text-slate-400">
         &copy; 2026 LOLTV Platform. Public & NXST Hybrid Architecture.
-    ></footer>
+    </footer>
 
     <!-- Application Script -->
     <script>
-        let channelsData = [];
+        // Default Channels Data (Embedded directly to avoid any fetch/404 issues)
+        let channelsData = [
+            { name: "TNT Sports 1", logo: "https://via.placeholder.com/150", url: "#" },
+            { name: "TNT Sports 2", logo: "https://via.placeholder.com/150", url: "#" },
+            { name: "BeIN Sports 1", logo: "https://via.placeholder.com/150", url: "#" },
+            { name: "BeIN Sports 2", logo: "https://via.placeholder.com/150", url: "#" },
+            { name: "GTV Public", logo: "https://via.placeholder.com/150", url: "#" },
+            { name: "T Sports Public", logo: "https://via.placeholder.com/150", url: "#" }
+        ];
+
         let lockedChannels = JSON.parse(localStorage.getItem('lockedChannels')) || {};
 
-        async function fetchChannels() {
-            try {
-                let response = await fetch('channels.json');
-                channelsData = await response.json();
-                renderChannels();
-            } catch (error) {
-                console.error("Error loading channels:", error);
-                document.getElementById('channels-grid').innerHTML = `<p class="text-red-400 col-span-full text-center">Failed to load channels.json</p>`;
-            }
+        function initApp() {
+            renderChannels();
         }
 
         function renderChannels() {
@@ -97,9 +99,9 @@
                 let cardHTML = `
                     <div class="glass rounded-xl overflow-hidden shadow-lg relative group transition hover:scale-[1.02]">
                         <div class="h-40 bg-slate-800 flex items-center justify-center relative">
-                            <img src="${channel.logo || 'https://via.placeholder.com/150'}" alt="${channel.name}" class="h-24 object-contain">
+                            <img src="${channel.logo}" alt="${channel.name}" class="h-24 object-contain">
                             ${isLocked ? `
-                                <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center group-hover:bg-slate-950/90 transition">
+                                <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
                                     <i class="fa-solid fa-lock text-red-500 text-3xl mb-2"></i>
                                     <span class="text-xs font-semibold text-red-400">Only for NXST Users</span>
                                 </div>
@@ -170,7 +172,8 @@
             renderChannels();
         }
 
-        fetchChannels();
+        // Run application on load
+        initApp();
     </script>
 </body>
 </html>
