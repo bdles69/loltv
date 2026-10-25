@@ -1,179 +1,1007 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOLTV - Hybrid IPTV Platform</title>
-    <!-- Tailwind CSS & FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NXST IPTV - Free Edition</title>
+  <!-- HLS.js for Streaming m3u8 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    /* সস্তা ও সাধারণ ফ্রি আইপিটিভি ইন্টারফেস স্টাইল */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1f1f1f;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffcc00;
+    }
+
+    .header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .manage-btn, .user-login-btn {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .user-login-btn { background: #b30000; border-color: #ff3333; }
+    .manage-btn:hover, .user-login-btn:hover { background: #444; }
+
+    /* Ticker Bar */
+    .ticker-wrap {
+      display: flex;
+      align-items: center;
+      background: #181818;
+      border: 1px solid #333;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .ticker-badge {
+      background: #cc0000;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 11px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .ticker-content { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+    .ticker-text {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: tickerAnimation 25s linear infinite;
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    @keyframes tickerAnimation {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 15px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    @media (max-width: 1100px) { .app-layout { grid-template-columns: 1fr; } }
+
+    .player-section { display: flex; flex-direction: column; gap: 10px; }
+
+    .video-card {
+      background: #000;
+      border: 1px solid #444;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .video-wrapper { position: relative; width: 100%; background: #000; aspect-ratio: 16/9; }
+    video { width: 100%; height: 100%; object-fit: contain; }
+
+    .live-badge {
+      position: absolute; top: 8px; left: 8px; background: #cc0000; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 2px; z-index: 5;
+    }
+
+    .info-box {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 12px;
+    }
+
+    .info-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #ffcc00;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 4px;
+    }
+
+    .info-row { font-size: 13px; margin-bottom: 4px; color: #aaa; }
+    .info-row span { color: #fff; }
+
+    .status-tag {
+      font-size: 10px; background: #333; color: #ffcc00; padding: 2px 6px; border-radius: 2px; display: inline-block;
+    }
+
+    .action-controls-wrapper { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .top-action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+    .action-btn {
+      background: #2b2b2b; border: 1px solid #444; color: #fff; padding: 7px; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center; font-size: 11px;
+    }
+    .action-btn:hover { background: #3a3a3a; }
+
+    .stream-switch-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 4px; }
+    .stream-switch-btn {
+      background: #222; color: #ccc; border: 1px solid #444; padding: 7px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center;
+    }
+    .stream-switch-btn.active-stream {
+      background: #0073e6 !important; color: #fff !important; border-color: #0059b3 !important;
+    }
+    .stream-switch-btn:disabled { background: #111 !important; color: #555 !important; border-color: #222 !important; cursor: not-allowed; }
+
+    .channels-section { display: flex; flex-direction: column; gap: 10px; }
+
+    .categories-bar {
+      display: flex; flex-wrap: wrap; gap: 6px; background: #1f1f1f; padding: 8px; border-radius: 4px; border: 1px solid #333; align-items: center; justify-content: space-between;
+    }
+
+    .cat-buttons-group { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .cat-btn {
+      background: #2b2b2b; color: #ccc; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;
+    }
+    .cat-btn.active, .cat-btn:hover { background: #ffcc00; color: #000; border-color: #e6b800; }
+
+    .view-switcher { display: flex; gap: 4px; background: #111; padding: 2px; border-radius: 4px; border: 1px solid #333; }
+    .view-btn { background: transparent; color: #aaa; border: none; padding: 4px 8px; border-radius: 2px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .view-btn.active { background: #333; color: #fff; }
+
+    .channels-grid.mode-card { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; min-height: 300px; }
+    .channels-grid.mode-list { display: flex; flex-direction: column; gap: 6px; min-height: 300px; }
+    .channels-grid.mode-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; min-height: 300px; }
+
+    .mode-card .channel-card {
+      height: 135px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px; text-align: center; position: relative; overflow: hidden;
+    }
+    .mode-card .channel-card:hover { border-color: #777; background: #222; }
+    .channel-card.active { border-color: #ffcc00 !important; background: #262626 !important; }
+
+    /* Locked Channel Styling */
+    .channel-card.is-locked .card-logo-wrapper img,
+    .channel-card.is-locked .card-text-logo { filter: blur(4px); opacity: 0.3; }
+    .locked-overlay-text {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; text-align: center; z-index: 5; font-size: 10px; font-weight: bold; color: #ff4d4d; line-height: 1.2;
+    }
+
+    .hd-badge {
+      position: absolute; top: 4px; right: 4px; background: #cc0000; color: #fff; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 2px; z-index: 6;
+    }
+
+    .card-logo-wrapper { width: 100%; height: 75px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    .card-logo { max-width: 85%; max-height: 85%; object-fit: contain; }
+    .card-text-logo { font-size: 14px; font-weight: bold; color: #fff; }
+
+    .card-name-bar { width: 100%; background: #111; padding: 3px 2px; border-radius: 2px; border-top: 1px solid #333; }
+    .card-name { font-size: 10px; font-weight: bold; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .mode-list .channel-card {
+      display: flex; align-items: center; justify-content: space-between; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 6px 10px; cursor: pointer; position: relative;
+    }
+    .mode-list .list-left { display: flex; align-items: center; gap: 10px; }
+    .mode-list .list-logo-img { width: 35px; height: 25px; object-fit: contain; }
+    .mode-list .list-channel-title { font-size: 12px; font-weight: bold; color: #ccc; }
+    .mode-list .list-play-btn { background: #333; color: #fff; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 2px; border: none; }
+
+    .pagination-controls {
+      display: flex; justify-content: space-between; align-items: center; background: #1f1f1f; padding: 8px 12px; border-radius: 4px; border: 1px solid #333; margin-top: 5px;
+    }
+    .arrow-btn { background: #333; color: #fff; border: 1px solid #555; padding: 5px 10px; border-radius: 2px; font-weight: bold; cursor: pointer; font-size: 11px; }
+    .arrow-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Admin Modal Styles */
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-box { background: #1a1a1a; border: 1px solid #444; border-radius: 6px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; }
+    .modal-header { padding: 10px 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; color: #ffcc00; font-size: 14px; font-weight: bold; }
+
+    .admin-controls-bar { padding: 10px 15px; background: #121212; border-bottom: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+    .search-input, .cat-add-input, .admin-filter-select, .mode-select-dropdown { background: #222; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 12px; width: 100%; outline: none; }
+    
+    .cat-manager-box { background: #1a1a1a; border: 1px solid #333; padding: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 6px; }
+    .cat-manager-list { display: flex; flex-wrap: gap; gap: 4px; max-height: 80px; overflow-y: auto; }
+    .cat-manage-item { background: #222; border: 1px solid #444; padding: 3px 6px; border-radius: 2px; display: flex; align-items: center; gap: 4px; font-size: 10px; color: #ffcc00; font-weight: bold; }
+    .cat-action-btn { cursor: pointer; font-size: 9px; background: #333; padding: 1px 4px; border-radius: 2px; border: none; color: #fff; }
+
+    .modal-body { padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .channel-input-group { background: #121212; padding: 10px; border-radius: 4px; border: 1px solid #333; display: grid; grid-template-columns: 1fr 1.1fr; gap: 10px; align-items: start; }
+    @media (max-width: 768px) { .channel-input-group { grid-template-columns: 1fr; } }
+
+    .edit-col-left { display: flex; flex-direction: column; gap: 6px; }
+    .edit-col-right { display: flex; flex-direction: column; gap: 6px; }
+
+    .slot-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .slot-input { width: 45px; background: #222; border: 1px solid #444; color: #ffcc00; font-weight: bold; padding: 3px; border-radius: 2px; text-align: center; }
+    .mode-select-dropdown { width: 80px; padding: 3px; font-size: 10px; }
+    .delete-btn { background: #b30000; color: white; border: none; padding: 4px 8px; border-radius: 2px; cursor: pointer; font-size: 10px; font-weight: bold; }
+
+    .admin-field-label { font-size: 10px; font-weight: bold; color: #aaa; }
+    .channel-input-group input[type="text"] { background: #222; border: 1px solid #444; color: #fff; padding: 5px; border-radius: 2px; font-size: 11px; width: 100%; }
+
+    .logo-preview-inline { width: 30px; height: 20px; object-fit: contain; border: 1px solid #444; background: #000; }
+    .categories-checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 3px; background: #222; padding: 5px; border-radius: 2px; border: 1px solid #444; max-height: 70px; overflow-y: auto; }
+    .categories-checkbox-group label { font-size: 9px; color: #ccc; display: flex; align-items: center; gap: 3px; cursor: pointer; }
+
+    .add-more-btn { background: #008000; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; text-align: center; font-size: 11px; margin-top: 4px; }
+    .modal-footer { padding: 10px 15px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .btn-save { background: #ffcc00; color: #000; border: none; padding: 6px 15px; border-radius: 2px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .btn-close { background: #555; color: white; border: none; padding: 6px 15px; border-radius: 2px; cursor: pointer; font-size: 12px; }
+    .json-btn { background: #005580; color: #fff; border: none; padding: 6px 10px; border-radius: 2px; font-size: 10px; font-weight: bold; cursor: pointer; }
+
+    footer { margin-top: auto; text-align: center; padding: 15px 0 5px 0; color: #777; font-size: 11px; }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-    <!-- Top Navigation Bar -->
-    <header class="glass sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-lg">
-        <div class="flex items-center space-x-3">
-            <i class="fa-solid fa-tv text-red-500 text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wider text-white">LOLTV <span class="text-xs bg-red-600 px-2 py-0.5 rounded text-white">Public Edition</span></h1>
-        </div>
-        <div class="flex items-center space-x-4">
-            <!-- NXST Login Redirect Button -->
-            <a href="http://192.168.0.227:8000/NXST%20IPTV%20-%20Multi-Category%20Luxury%20Edition.html" target="_blank" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md transition flex items-center space-x-2">
-                <i class="fa-solid fa-user-shield"></i>
-                <span>Login as NXST User</span>
-            </a>
-            <!-- Admin Panel Button -->
-            <button onclick="openAdminModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-sm transition">
-                <i class="fa-solid fa-gear"></i> Admin
-            </button>
-        </div>
-    </header>
+  <header>
+    <div class="brand-title">NXST IPTV - Free Edition</div>
+    <div class="header-controls">
+      <a href="http://192.168.0.227:8000/NXST%20IPTV%20-%20Multi-Category%20Luxury%20Edition.html" class="user-login-btn">👤 Login as NXST User</a>
+      <button class="manage-btn" onclick="openAdminModal()">⚙️ Admin Panel</button>
+    </div>
+  </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto px-4 py-8">
-        <div class="mb-6 flex justify-between items-center">
-            <h2 class="text-2xl font-semibold text-slate-100">Available Channels</h2>
-            <div class="text-sm text-slate-400">Public Streams Live</div>
-        </div>
+  <!-- News Ticker Bar -->
+  <div class="ticker-wrap">
+    <div class="ticker-badge">NOTICE</div>
+    <div class="ticker-content">
+      <div class="ticker-text" id="displayTickerText">
+        Welcome to NXST IPTV - Free Edition | Enjoy Uninterrupted Live Streams | Use Admin Panel (Pass: 123).
+      </div>
+    </div>
+  </div>
 
-        <!-- Channels Grid -->
-        <div id="channels-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- Channels Will Load Dynamically -->
+  <div class="app-layout">
+    <div class="player-section">
+      <div class="video-card">
+        <div class="live-badge">LIVE</div>
+        <div class="video-wrapper">
+          <video id="videoPlayer" controls autoplay muted></video>
         </div>
-    </main>
+      </div>
 
-    <!-- Admin Login / Panel Modal -->
-    <div id="admin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-        <div class="glass p-6 rounded-2xl w-96 max-w-full relative shadow-2xl">
-            <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <div id="admin-auth-view">
-                <h3 class="text-xl font-bold mb-4 text-white">Admin Authentication</h3>
-                <p class="text-sm text-slate-400 mb-4">Enter password to access management control.</p>
-                <input type="password" id="admin-pass-input" placeholder="Enter Password" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white mb-4 focus:outline-none focus:border-red-500">
-                <button onclick="verifyAdmin()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition">Login</button>
-            </div>
-            <div id="admin-dashboard-view" class="hidden">
-                <h3 class="text-xl font-bold mb-4 text-white">Admin Control Panel</h3>
-                <p class="text-sm text-slate-400 mb-4">Toggle locks for channels or streams.</p>
-                <div id="admin-channels-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    <!-- Admin Channel Items -->
-                </div>
-            </div>
+      <div class="info-box">
+        <div class="info-title" id="infoChannelName">চ্যানেল সিলেক্ট করুন</div>
+        <div class="info-row"><span>Active Stream:</span> <strong id="infoSource" style="color:#fff;">None</strong></div>
+        <div class="info-row"><span>Status:</span> <span class="status-tag" id="streamStatus">Idle</span></div>
+
+        <div class="action-controls-wrapper">
+          <div class="top-action-btns">
+            <button class="action-btn" onclick="toggleFullscreen()">📺 Fullscreen</button>
+            <button class="action-btn" onclick="retryCurrentStream()">🔄 Reload Stream</button>
+          </div>
+
+          <div class="stream-switch-container">
+            <button class="stream-switch-btn" id="streamBtn1" onclick="switchStream(1)">Stream 1</button>
+            <button class="stream-switch-btn" id="streamBtn2" onclick="switchStream(2)">Stream 2</button>
+            <button class="stream-switch-btn" id="streamBtn3" onclick="switchStream(3)">Stream 3</button>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="glass py-4 text-center text-sm text-slate-400">
-        &copy; 2026 LOLTV Platform. Public & NXST Hybrid Architecture.
-    </footer>
+    <div class="channels-section">
+      <div class="categories-bar">
+        <div class="cat-buttons-group" id="categoriesBar"></div>
+        <div class="view-switcher">
+          <button class="view-btn active" id="viewCardBtn" onclick="setChannelViewMode('mode-card')">Card</button>
+          <button class="view-btn" id="viewListBtn" onclick="setChannelViewMode('mode-list')">List</button>
+          <button class="view-btn" id="viewMiniBtn" onclick="setChannelViewMode('mode-mini')">Mini</button>
+        </div>
+      </div>
 
-    <!-- Application Script -->
-    <script>
-        // Default Channels Data (Embedded directly to avoid any fetch/404 issues)
-        let channelsData = [
-            { name: "TNT Sports 1", logo: "https://via.placeholder.com/150", url: "#" },
-            { name: "TNT Sports 2", logo: "https://via.placeholder.com/150", url: "#" },
-            { name: "BeIN Sports 1", logo: "https://via.placeholder.com/150", url: "#" },
-            { name: "BeIN Sports 2", logo: "https://via.placeholder.com/150", url: "#" },
-            { name: "GTV Public", logo: "https://via.placeholder.com/150", url: "#" },
-            { name: "T Sports Public", logo: "https://via.placeholder.com/150", url: "#" }
-        ];
+      <div class="channels-container-wrapper">
+        <div class="channels-grid mode-card" id="channelsGrid"></div>
 
-        let lockedChannels = JSON.parse(localStorage.getItem('lockedChannels')) || {};
+        <div class="pagination-controls" id="paginationControls" style="display: none;">
+          <button class="arrow-btn" id="prevBtn" onclick="changePage(-1)" disabled>◀ Prev</button>
+          <span class="page-info" id="pageIndicator" style="color: #ffcc00; font-weight:bold; font-size:11px;">Page 1 of 1</span>
+          <button class="arrow-btn" id="nextBtn" onclick="changePage(1)" disabled>Next ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        function initApp() {
-            renderChannels();
+  <footer>
+    NXST IPTV © Free Edition || 2026
+  </footer>
+
+  <!-- Admin Modal -->
+  <div class="modal-overlay" id="linkModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>⚙️ Admin Panel - Channel & Lock Controls</span>
+        <span style="cursor:pointer;" onclick="closeModal()">✖</span>
+      </div>
+
+      <div class="admin-controls-bar">
+        <div style="display:flex; gap:6px; align-items:center; background:#1a1a1a; padding:6px; border-radius:4px; border:1px solid #333;">
+          <span style="font-size:11px; font-weight:bold; color:#aaa; white-space:nowrap;">Notice:</span>
+          <input type="text" id="tickerInput" class="search-input" style="flex:1;" placeholder="Scrolling text...">
+          <button style="background:#333; color:#fff; border:none; padding:5px 10px; border-radius:2px; font-weight:bold; cursor:pointer; font-size:10px;" onclick="saveTickerNotice()">Update</button>
+        </div>
+
+        <div class="cat-manager-box">
+          <span style="font-size:11px; font-weight:bold; color:#aaa;">Categories:</span>
+          <div class="cat-manager-list" id="adminCatManagerList"></div>
+          <div style="display:flex; gap:6px; margin-top:2px;">
+            <input type="text" id="newCategoryInput" class="cat-add-input" placeholder="New category name">
+            <button style="background:#333; color:#fff; padding:4px 10px; border-radius:2px; font-weight:bold; cursor:pointer; border:none; font-size:10px;" onclick="addNewCategory()">Add</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 6px;">
+          <select id="adminCatFilter" class="admin-filter-select" onchange="renderModalInputs()"></select>
+          <input type="text" id="adminSearchInput" class="search-input" placeholder="Search channel..." oninput="renderModalInputs()">
+        </div>
+      </div>
+
+      <div class="modal-body" id="modalInputs"></div>
+
+      <div style="padding: 0 10px;">
+        <button class="add-more-btn" onclick="addNewSlot()">➕ Add New Channel Slot</button>
+      </div>
+
+      <div class="modal-footer">
+        <div>
+          <button class="json-btn" onclick="exportJSONBackup()">Export JSON</button>
+          <button class="json-btn" onclick="document.getElementById('importFile').click()">Import JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSONBackup(event)">
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-close" onclick="closeModal()">Cancel</button>
+          <button class="btn-save" onclick="saveChannels()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ১০০% নিখুঁত ১০৩টি চ্যানেলের আসল ডেটা
+    const embeddedData = {
+      "categories": ["SPORTS", "NEWS", "ENTERTAINMENT", "BANGLADESH", "HINDI", "MOVIES", "MUSIC", "DOCUMENTARY", "KIDS", "SONY CHANNELS"],
+      "unifiedChannels": [
+        {"id":1,"slot":1,"name":"Discovery Kids","logo":"https://upload.wikimedia.org/wikipedia/commons/b/be/Discovery_Kids_%282009%29.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/DISCOVERY-KIDS/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Discoverykids/tracks-v1a1/mono.m3u8","stream3":"","isHd":false,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":2,"slot":1,"name":"T SPORTS","logo":"https://upload.wikimedia.org/wikipedia/commons/4/4c/T_Sports_logo.svg","textLogo":"T SPORTS","stream1":"http://103.89.248.10:8082/T-SPORTS/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/T-Sports-HD/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":3,"slot":2,"name":"Cartoon Network HD+","logo":"https://upload.wikimedia.org/wikipedia/commons/c/c5/Cartoon_Network_HD%2B_India_logo.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/cn/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/CN/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":4,"slot":2,"name":"Star Sports 1","logo":"https://i.postimg.cc/brsfp7HT/st1s.png","textLogo":"SS1","stream1":"https://s1.itcnbd.live/Star.Sports.1.HD/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/STAR-SPORTS-1/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":5,"slot":3,"name":"DURONTO TV","logo":"https://upload.wikimedia.org/wikipedia/en/d/d7/Duronto_TV_Logo.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/DURONTO-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":6,"slot":3,"name":"Star Sports 2","logo":"https://i.postimg.cc/nrR7QDmL/wwww.png","textLogo":"SS2","stream1":"http://103.89.248.10:8082/STAR-SPORTS-2/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Star.Sports.2.HD/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":7,"slot":4,"name":"Nick JR","logo":"https://logos-world.net/wp-content/uploads/2021/09/Nick-Jr.-Logo-2009-present.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Nick/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":8,"slot":4,"name":"Star Sports 3","logo":"https://i.postimg.cc/6Qv0JYvh/stb3.png","textLogo":"SELECT 1","stream1":"http://103.89.248.10:8082/Star-sport-3/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":9,"slot":5,"name":"Disney Channel","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/2014_Disney_Channel_logo.svg/3840px-2014_Disney_Channel_logo.svg.png","textLogo":"TV","stream1":"https://s3.itcnbd.live/server-6/stream/resource/aHR0cDovLzE3Mi4xNi4yMDAuMjA1OjgwODgvNjAyL/RyYWNrcy12MWExL21vbm8ubTN1OD90b2tlbj1hNTdiNDQ0YzZmYWFjZGI1Y2FhMjcwOTUwYTZhMjMwMWIwZWQyODA2LWE4ZTYxZmVkMmFiYjRkMWIyZjJmODI3M2EwNDVlZWVlLTE3OTI4NjY5MjctMTc5Mjg2MzMyNw","stream2":"","stream3":"","isHd":false,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":10,"slot":5,"name":"Star Sports Select 1","logo":"https://static.wikia.nocookie.net/logopedia/images/3/37/Star-sports-select-1.png","textLogo":"SELECT 2","stream1":"http://103.89.248.10:8082/Star-sports-select-1/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Star.Sports.sel1.HD/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":11,"slot":6,"name":"SONY YAY","logo":"https://www.sonypicturesnetworks.com/images/logos/SONY%20YAY.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/SONY-YAY/index.m3u8","stream2":"","stream3":"","isHd":false,"categories":["KIDS","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":12,"slot":6,"name":"Star Sports Select 2","logo":"https://static.wikia.nocookie.net/logopedia/images/3/3b/Star-sports-select-2.png","textLogo":"TEN 1","stream1":"https://s1.itcnbd.live/Star.Sports.sel2.HD/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/Star-sports-select-2/tracks-v1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":13,"slot":7,"name":"POGO","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/POGO-logo.svg/3840px-POGO-logo.svg.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/POGO/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/pogo/tracks-v1a1/mono.m3u8","stream3":"","isHd":false,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":14,"slot":7,"name":"Sony Ten 1","logo":"https://www.sonypicturesnetworks.com/images/logos/SONY_SportsTen1_SD_Logo_CLR.png","textLogo":"TEN 2","stream1":"https://s1.itcnbd.live/sonyten1/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/Sony-TEN-1/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":15,"slot":8,"name":"BTV","logo":"https://i.postimg.cc/w1ypLfS9/Gemini-Generated-Image-tw7ue7tw7ue7tw7u-(1).jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/BTV/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/PTV-Sports/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":16,"slot":8,"name":"Sony Ten 2","logo":"https://www.sonypicturesnetworks.com/images/logos/SONY_SportsTen2_SD_Logo_CLR.png","textLogo":"TEN 5","stream1":"https://s1.itcnbd.live/Sony.Sports2/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/sony-TEN-2/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":17,"slot":9,"name":"ATN News","logo":"https://i.postimg.cc/gLYRQ6vX/atnnews.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/ATN-NEWS/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":18,"slot":9,"name":"Sony Ten 3","logo":"https://www.sonypicturesnetworks.com/images/logos/Sony_Sports_Ten_3_Hindi.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/sony.ten.3/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/sony-ten3/tracks-v1a1/mono.m3u8","stream3":"","isHd":false,"categories":["SPORTS","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":19,"slot":10,"name":"ATN Bangla","logo":"https://i.postimg.cc/BPqDk1x8/atnbangla.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/ATN-BANGLA/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/ATN.Bangla/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":20,"slot":10,"name":"Sony Ten 5","logo":"https://www.sonypicturesnetworks.com/images/logos/SONY_SportsTen5_SD_Logo_CLR.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/sonytv5/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/Sony-TEN-5/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":21,"slot":11,"name":"Ananda TV","logo":"https://i.postimg.cc/4HJtqhzn/anandotv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/ANANDA-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":22,"slot":11,"name":"PTV Sports","logo":"https://upload.wikimedia.org/wikipedia/en/e/e4/PTV_Sports.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/PTV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":23,"slot":12,"name":"DBC NEWS","logo":"https://i.postimg.cc/JtZMd2nh/Gemini-Generated-Image-xqkomyxqkomyxqko.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/DBC-NEWS/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/DBC.News/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":24,"slot":12,"name":"A Sports","logo":"https://upload.wikimedia.org/wikipedia/en/0/0c/A_Sports_Logo.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/A-SPORTS/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/A-Sports/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":25,"slot":13,"name":"Banglavision","logo":"https://i.postimg.cc/pyzR16Ty/Gemini-Generated-Image-um035um035um035u.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/BANGLAVISION-HD/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":26,"slot":13,"name":"Ten Cricket","logo":"https://ethnicchannels.com/images/channeldetail/ten-cricket/ten-ckt-logo.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Ten-Cricket-HD/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":27,"slot":14,"name":"Bijoy TV","logo":"https://i.postimg.cc/p5284nD5/bijoytv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/BIJOY-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":28,"slot":14,"name":"FOX Sports 501","logo":"https://yt3.googleusercontent.com/ytc/AIdro_mMJL3P-vcTLif2h4V_S17ksNozzOICQKXMMmfdowlx9Q=s900-c-k-c0x00ffffff-no-rj","textLogo":"TV","stream1":"http://103.89.248.10:8082/FOX-SPORTS-CRICKET/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":29,"slot":15,"name":"Boishakhi TV","logo":"https://i.postimg.cc/c6w05bHC/Gemini-Generated-Image-vt9qyevt9qyevt9q.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/BOISHAKHAI-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":30,"slot":15,"name":"CricBuzz Live","logo":"https://thumb.wikimedia.org/wikipedia/en/thumb/7/7e/Cricbuzz_Logo.svg/1280px-Cricbuzz_Logo.svg.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/ASIA-CUP-2025/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":31,"slot":16,"name":"Channel I","logo":"https://i.postimg.cc/2LzvMB4h/channeli.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/CHANNAL-I/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Channel24/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":32,"slot":16,"name":"Willow","logo":"https://s21.q4cdn.com/819998841/files/doc_news/2024/May/Willow-logo-transparent-cb.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/willow/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":33,"slot":17,"name":"Supersports Cricket","logo":"https://i.postimg.cc/ZvP6nxxD/Gemini-Generated-Image-nzu0nfnzu0nfnzu0-removebg-preview.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/SUPERSPORTS-CRICKET/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":34,"slot":17,"name":"Channel 9","logo":"https://i.postimg.cc/gLYRQ6vZ/channel9.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/CHANNEL-9/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":35,"slot":18,"name":"ESPN","logo":"https://static.vecteezy.com/system/resources/previews/027/127/453/non_2x/espn-logo-espn-icon-transparent-free-png.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/ESPN-1/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":36,"slot":18,"name":"DEEPTO","logo":"https://i.postimg.cc/23hrXK66/Gemini-Generated-Image-abqs44abqs44abqs.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/DEEPTO/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":37,"slot":19,"name":"Bein Sports 1","logo":"https://upload.wikimedia.org/wikipedia/commons/e/e5/Logo_bein_sports_1.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Bein-hd/tracks-v1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":38,"slot":19,"name":"DESH TV","logo":"https://i.postimg.cc/t7yhY885/deshtv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/DESH/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":39,"slot":20,"name":"Bein Sports 2","logo":"https://upload.wikimedia.org/wikipedia/commons/c/c9/Logo_bein_sports_2.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/BEIN-SPORTS-2/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":40,"slot":20,"name":"Ekhon TV","logo":"https://i.postimg.cc/G9rkH66X/ekhon.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/EKHON-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":41,"slot":21,"name":"Bein Sports 3","logo":"https://upload.wikimedia.org/wikipedia/commons/c/c4/Logo_bein_sports_3.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/BEIN-SPORTS-3/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":42,"slot":21,"name":"Ekushey TV","logo":"https://i.postimg.cc/z35nV440/ekushey.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/EKUSHEY-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":43,"slot":22,"name":"Bein Xtra","logo":"https://i.postimg.cc/mZXg2GyT/Gemini-Generated-Image-h5qf27h5qf27h5qf-removebg-preview.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Benxrta/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":44,"slot":22,"name":"Gazi TV","logo":"https://i.postimg.cc/s1ypvbbK/gazi.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/GAZI-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":45,"slot":23,"name":"Sky Sports Cricket","logo":"https://i.postimg.cc/gj8pK11p/skycricket.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/Sky-Sports-Cricket/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":46,"slot":23,"name":"Global TV","logo":"https://i.postimg.cc/t7yhY88M/globaltv.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/GLOBAL-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":47,"slot":24,"name":"Sky Sports Football","logo":"https://i.postimg.cc/FKzQ6Yws/skyfootball.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/SKY-Sports-Football/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":48,"slot":24,"name":"Independent TV","logo":"https://i.postimg.cc/6TwdyFFj/independenttv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/INDEPENDENT-NEWS/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":49,"slot":25,"name":"Sky Sports Main Event","logo":"https://i.postimg.cc/JskYLCb6/skymainevent.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/Sky-Sports-Main-Event/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":50,"slot":25,"name":"Jamuna TV","logo":"https://i.postimg.cc/SjqWJHHt/jamunatv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/Jamuna/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/MyTV/tracks-v1a1/mono.m3u8","stream3":"","isHd":false,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":51,"slot":26,"name":"Sky Sports Premier League","logo":"https://i.postimg.cc/k2KsHFCJ/05a76e01-6182-4ad0-8603-ac935ee3a612.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/Sky-Sports-premier-League/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":52,"slot":26,"name":"News 24","logo":"https://i.postimg.cc/BtsxXRRr/news24.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/NEWS-24/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":53,"slot":27,"name":"TNT Sports 1","logo":"https://static.wikia.nocookie.net/logopedia/images/3/30/TNT_Sports_1_Stacked.svg","textLogo":"TV","stream1":"http://103.89.248.10:8082/TNT-Sports-1/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":54,"slot":27,"name":"Nagorik TV","logo":"https://i.postimg.cc/xqYKcBWr/nagorik.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/NAGORIK-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":55,"slot":28,"name":"TNT Sports 2","logo":"https://static.wikia.nocookie.net/logopedia/images/b/be/TNT_Sports_2_Stacked.svg","textLogo":"TV","stream1":"http://103.89.248.10:8082/TNT-Sports-2/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":56,"slot":28,"name":"Ekattor TV","logo":"https://i.postimg.cc/rzcSK77j/ekattortv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/71-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":57,"slot":29,"name":"TNT Sports 3","logo":"https://static.wikia.nocookie.net/logopedia/images/0/07/TNT_Sports_3_Stacked.svg","textLogo":"TV","stream1":"http://103.89.248.10:8082/TNT-Sports-3/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":58,"slot":29,"name":"Maasranga TV","logo":"https://i.postimg.cc/F1mj7ww6/maasranga.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/MAASRANGA-TV/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Masranga.TV/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":59,"slot":30,"name":"Eurosport","logo":"https://logos-world.net/wp-content/uploads/2022/05/Eurosport-Emblem.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Eurosports/tracks-v1/mono.m3u8","stream2":"https://s1.itcnbd.live/Eurosports/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["SPORTS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":60,"slot":30,"name":"Mohona TV","logo":"https://i.postimg.cc/dDv8Lggz/mohonatv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/MOHONA-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":61,"slot":31,"name":"MY TV","logo":"https://i.postimg.cc/JtmbGS9V/mytv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/MY-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":62,"slot":32,"name":"RTV","logo":"https://i.postimg.cc/PNhmP0BH/rtv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/RTV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":63,"slot":33,"name":"NTV","logo":"https://i.postimg.cc/jCKzLBGb/ntv.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/NTV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":64,"slot":34,"name":"Nexus Television","logo":"https://i.postimg.cc/14j7wmPt/nexustv-(1).jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/NEXUS-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":65,"slot":35,"name":"Asian TV","logo":"https://i.postimg.cc/fJdCdY8Q/1d781236-0dbb-4d0e-98f2-89be48218788.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/ASIAN-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":66,"slot":36,"name":"Ruposhi Bangla","logo":"https://i.postimg.cc/K4FnRCdm/Rupasi-bangla.jpg","textLogo":"TV","stream1":"http://103.89.248.10:8082/RUPOSHI-BANGLA/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["BANGLADESH"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":67,"slot":37,"name":"Sony Television","logo":"https://www.sonypicturesnetworks.com/images/logos/SET%20LOGO.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Sonytv.sd/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["ENTERTAINMENT","HINDI","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":68,"slot":38,"name":"Sony Television HD","logo":"https://www.sonypicturesnetworks.com/images/logos/SET-LOGO-HD.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Sonytvhd/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT","HINDI","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":69,"slot":39,"name":"Sony Max","logo":"https://www.sonypicturesnetworks.com/images/logos/Sony_MAX-HD_WHITE.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/SONY-MAX/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/sonymax/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["ENTERTAINMENT","HINDI","MOVIES","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":70,"slot":40,"name":"Sony Max 2","logo":"https://www.sonypicturesnetworks.com/images/logos/Sony_MAX2.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/sony-max2/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["ENTERTAINMENT","HINDI","MOVIES","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":71,"slot":41,"name":"Sony Aath","logo":"https://www.sonypicturesnetworks.com/images/logos/SONY%20AATH.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Sony-Aath/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Sony.aaht/tracks-v1a1/mono.m3u8","stream3":"","isHd":false,"categories":["ENTERTAINMENT","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":72,"slot":42,"name":"Sony Pix","logo":"https://www.sonypicturesnetworks.com/images/logos/PIX%20SD.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Pix.HD/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["ENTERTAINMENT","MOVIES","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":73,"slot":43,"name":"Star Jalsha","logo":"https://static.wikia.nocookie.net/logopedia/images/a/ac/Star_Jalsha_HD_2019_Chalo_Paltai.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/starjalsha/tracks-v1a1/mono.m3u8","stream2":"http://103.89.248.10:8082/Star_jalsha/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":74,"slot":44,"name":"Jalsha Movies","logo":"https://static.wikia.nocookie.net/etv-gspn-bangla/images/6/69/Jalsha_Movies_HD_alt.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/JALSHA-MOVIES/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/starjalsha/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["ENTERTAINMENT","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":75,"slot":45,"name":"Star Plus","logo":"https://static.wikia.nocookie.net/logopedia/images/3/32/StarPlus_logo_%282018%29.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Star.plus/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT","HINDI"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":76,"slot":46,"name":"Star Gold","logo":"https://images.seeklogo.com/logo-png/31/2/star-gold-logo-png_seeklogo-310758.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/star-gold/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Star.gold/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["ENTERTAINMENT","HINDI","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":77,"slot":47,"name":"Star Movies","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/STAR_Movies_logo.svg/3840px-STAR_Movies_logo.svg.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Star.Movies/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":78,"slot":48,"name":"COLORS HD","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/Colors_TV_logo.svg/250px-Colors_TV_logo.svg.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/colors/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT","HINDI"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":79,"slot":49,"name":"COLORS Bangla","logo":"https://upload.wikimedia.org/wikipedia/commons/7/7b/Colors_Bangla.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Colors-Bangla/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Colors.Bangla/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":80,"slot":50,"name":"COLORS Bangla Cinema","logo":"https://static.wikia.nocookie.net/logopedia/images/8/8c/Colors_Bangla_Cinema.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/COLORS-BANGLA-CINEMA/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["ENTERTAINMENT","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":81,"slot":51,"name":"& Pictures","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/%26pictures.svg/3840px-%26pictures.svg.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Andpicture/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT","HINDI","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":82,"slot":52,"name":"B4U Movies","logo":"https://static.wikia.nocookie.net/logopedia/images/1/1b/B4U_MOVIES_2014.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/B4U-MOVIES/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["ENTERTAINMENT","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":83,"slot":53,"name":"My Time","logo":"https://mytimemovienetwork.com/wp-content/uploads/elementor/thumbs/logo-white-ovbvbhqmsdprb6sqz8bdil61k1zcy8bv2whim3g1os.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/my-time/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":84,"slot":54,"name":"TRAVEL XP","logo":"https://static.wikia.nocookie.net/logopedia/images/5/5b/Travelxp_HD.svg","textLogo":"TV","stream1":"http://103.89.248.10:8082/travel-xp/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":85,"slot":55,"name":"Discovery HD","logo":"https://static.wikia.nocookie.net/logopedia/images/b/b5/Discovery_Channel_2008.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/DISCOVERY-HD/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Discovery/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":86,"slot":56,"name":"National Geographic","logo":"https://upload.wikimedia.org/wikipedia/commons/6/62/Logo_Chaine_National_Geographic_Channel.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/National-geo-graphy-bangla/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":87,"slot":57,"name":"Nat Geo Wild","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Logo_Nat_Geo_Wild.svg/1280px-Logo_Nat_Geo_Wild.svg.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/nat-geo-wild/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":88,"slot":58,"name":"Investigation Discovery","logo":"https://upload.wikimedia.org/wikipedia/commons/4/41/InvestigationDiscovery.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Investigation-Discovery/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":89,"slot":59,"name":"Discovery Science","logo":"https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Discovery_Science_-_Logo_2012.svg/960px-Discovery_Science_-_Logo_2012.svg.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Discovery-Science/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":90,"slot":60,"name":"BBC Earth","logo":"https://www.sonypicturesnetworks.com/images/logos/SBBCE_LOGO_NEW_AI_SD.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/BBC-Earth/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["DOCUMENTARY","SONY CHANNELS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":91,"slot":61,"name":"Animal Planet","logo":"https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg","textLogo":"TV","stream1":"https://s1.itcnbd.live/Animal/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["DOCUMENTARY"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":92,"slot":62,"name":"BBC News","logo":"https://download.logo.wine/logo/BBC_News/BBC_News-Logo.wine.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/bbc/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["NEWS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":93,"slot":63,"name":"SANGEET BANGLA","logo":"https://static.wikia.nocookie.net/logopedia/images/b/b5/Sangeet_Bangla_logo_with_slogan_2006.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/SANGEET-BANGLA/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/SangeetBangla/tracks-v1/mono.m3u8","stream3":"","isHd":false,"categories":["MUSIC"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":94,"slot":64,"name":"9XM Music","logo":"https://static.wikia.nocookie.net/logopedia/images/8/81/9xm_red.svg","textLogo":"TV","stream1":"https://s1.itcnbd.live/9XM-Music/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["MUSIC"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":95,"slot":65,"name":"FON Music","logo":"https://static.wikia.nocookie.net/logopedia/images/b/b7/FON_MUSIC.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/fon-music/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["MUSIC"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":96,"slot":66,"name":"Channel 102","logo":"","textLogo":"TV","stream1":"","stream2":"","stream3":"","isHd":false,"categories":["KIDS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":97,"slot":99,"name":"Zee Bangla","logo":"https://images.seeklogo.com/logo-png/63/2/zee-bangla-logo-png_seeklogo-630697.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/zee-bangla/tracks-v1a1/mono.m3u8","stream2":"https://s1.itcnbd.live/Zee-Bangla/tracks-v1a1/mono.m3u8","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":98,"slot":100,"name":"Zee Bangla Cinema","logo":"https://static.cdnlogo.com/logos/z/84/zee-bangla-cinema_thumb.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/ZEE-BANGLA-CINEMA/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["ENTERTAINMENT","MOVIES"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":99,"slot":101,"name":"Zee Cinema","logo":"https://resizer-acm.eco.astro.com.my/tr:w-256,q:85/https://divign0fdw3sv.cloudfront.net/Images/ChannelLogo/contenthub/490_144.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/Zee.Cinema/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":100,"slot":102,"name":"HUM Masala","logo":"https://mir-s3-cdn-cf.behance.net/project_modules/max_632/a2b8c3190491277.65bb9e0eea3f5.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Hum-masala/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":101,"slot":103,"name":"HUM TV","logo":"https://crystalpng.com/wp-content/uploads/2025/04/hum-logo.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/HUM-TV/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":102,"slot":104,"name":"Al Jazeera","logo":"https://logos-world.net/wp-content/uploads/2023/04/Al-Jazeera-Logo.png","textLogo":"TV","stream1":"https://s1.itcnbd.live/alzazira/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":false,"categories":["NEWS"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false},
+        {"id":103,"slot":105,"name":"HUM Sitaray","logo":"https://upload.wikimedia.org/wikipedia/en/e/e7/Hum_Sitaray_Logo.png","textLogo":"TV","stream1":"http://103.89.248.10:8082/Hum-Sitarey/tracks-v1a1/mono.m3u8","stream2":"","stream3":"","isHd":true,"categories":["ENTERTAINMENT"],"isLocked":false,"lockStream1":false,"lockStream2":false,"lockStream3":false}
+      ],
+      "liveMatches": [],
+      "tickerNotice": "Welcome to NXST IPTV - Free Edition | Enjoy Uninterrupted Live Streams | Use Admin Panel (Pass: 123)."
+    };
+
+    let allCategories = JSON.parse(localStorage.getItem('nightwave_categories')) || embeddedData.categories;
+    let unifiedChannels = JSON.parse(localStorage.getItem('nxst_multi_channels')) || embeddedData.unifiedChannels;
+    let liveMatches = JSON.parse(localStorage.getItem('nxst_live_matches')) || embeddedData.liveMatches;
+    let currentTickerNotice = localStorage.getItem('nxst_ticker_text') || embeddedData.tickerNotice;
+    let activeViewMode = localStorage.getItem('nxst_view_mode') || 'mode-card';
+
+    let currentCategory = allCategories.length > 0 ? allCategories[0] : 'SPORTS';
+    let currentActiveChannel = null;
+    let currentActiveStreamIndex = 1;
+    let currentPage = 1;
+    const itemsPerPage = 20;
+
+    const video = document.getElementById('videoPlayer');
+    let hls = new Hls();
+
+    function applyTickerText() {
+      document.getElementById('displayTickerText').innerText = currentTickerNotice;
+      document.getElementById('tickerInput').value = currentTickerNotice;
+    }
+
+    function saveTickerNotice() {
+      const val = document.getElementById('tickerInput').value.trim();
+      if (val) {
+        currentTickerNotice = val;
+        localStorage.setItem('nxst_ticker_text', currentTickerNotice);
+        applyTickerText();
+        alert('নোটিশ আপডেট করা হয়েছে!');
+      }
+    }
+
+    function setChannelViewMode(mode) {
+      activeViewMode = mode;
+      localStorage.setItem('nxst_view_mode', mode);
+      const grid = document.getElementById('channelsGrid');
+      grid.className = `channels-grid ${mode}`;
+      document.getElementById('viewCardBtn').classList.toggle('active', mode === 'mode-card');
+      document.getElementById('viewListBtn').classList.toggle('active', mode === 'mode-list');
+      document.getElementById('viewMiniBtn').classList.toggle('active', mode === 'mode-mini');
+      renderChannels();
+    }
+
+    function getCombinedChannelList() {
+      let sortedRegular = [...unifiedChannels].sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+      return [...liveMatches, ...sortedRegular];
+    }
+
+    function renderCategoryButtons() {
+      const bar = document.getElementById('categoriesBar');
+      bar.innerHTML = '';
+      if (!allCategories.includes(currentCategory)) {
+        currentCategory = allCategories.length > 0 ? allCategories[0] : '';
+      }
+      allCategories.forEach(cat => {
+        const isActive = currentCategory === cat ? 'active' : '';
+        bar.innerHTML += `<button class="cat-btn ${isActive}" onclick="filterCategory('${cat}')">${cat}</button>`;
+      });
+    }
+
+    function renderChannels() {
+      const grid = document.getElementById('channelsGrid');
+      grid.innerHTML = '';
+
+      let combinedList = getCombinedChannelList();
+      let filtered = combinedList.filter(c => c.isLive || (c.categories && c.categories.includes(currentCategory)));
+
+      const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedChannels = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+      paginatedChannels.forEach(ch => {
+        const card = document.createElement('div');
+        const isActive = currentActiveChannel && ch.id === currentActiveChannel.id;
+        card.className = `channel-card ${isActive ? 'active' : ''} ${ch.isLocked ? 'is-locked' : ''}`;
+        
+        card.onclick = () => {
+          if (ch.isLocked) {
+            alert('🔒 এই চ্যানেলটি লক করা আছে। দেখতে চাইলে ওপরের "Login as NXST User" বাটনে ক্লিক করুন।');
+            return;
+          }
+          let firstStream = 1;
+          if (ch.stream1 && ch.stream1.trim() !== '' && !ch.lockStream1) firstStream = 1;
+          else if (ch.stream2 && ch.stream2.trim() !== '' && !ch.lockStream2) firstStream = 2;
+          else if (ch.stream3 && ch.stream3.trim() !== '' && !ch.lockStream3) firstStream = 3;
+          playChannel(ch, firstStream);
+        };
+
+        let hdBadgeHTML = ch.isHd ? `<div class="hd-badge">HD</div>` : '';
+        let lockedOverlay = ch.isLocked ? `<div class="locked-overlay-text">🔒 LOCKED<br><span style="font-size:8px; color:#aaa;">Login as NXST User</span></div>` : '';
+
+        if (activeViewMode === 'mode-list') {
+          let logoSrc = ch.logo ? `<img src="${ch.logo}" class="list-logo-img" alt="${ch.name}">` : `<span style="font-weight:bold; color:#ffcc00;">${ch.textLogo || 'TV'}</span>`;
+          card.innerHTML = `
+            <div class="list-left">
+              ${logoSrc}
+              <div class="list-channel-title">${ch.name} ${ch.isLocked ? '<span style="color:#ff4d4d;">[LOCKED]</span>' : ''}</div>
+            </div>
+            <button class="list-play-btn">${ch.isLocked ? 'LOCKED' : 'PLAY'}</button>
+          `;
+        } else {
+          let logoContent = ch.logo 
+            ? `<div class="card-logo-wrapper"><img src="${ch.logo}" class="card-logo" alt="${ch.name}">${lockedOverlay}</div>` 
+            : `<div class="card-logo-wrapper"><div class="card-text-logo">${ch.textLogo || ch.name}</div>${lockedOverlay}</div>`;
+
+          card.innerHTML = `
+            ${hdBadgeHTML}
+            ${logoContent}
+            <div class="card-name-bar">
+              <div class="card-name">${ch.name}</div>
+            </div>
+          `;
         }
+        grid.appendChild(card);
+      });
 
-        function renderChannels() {
-            const grid = document.getElementById('channels-grid');
-            grid.innerHTML = '';
+      document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prevBtn').disabled = (currentPage === 1);
+      document.getElementById('nextBtn').disabled = (currentPage === totalPages);
+      document.getElementById('paginationControls').style.display = (filtered.length <= itemsPerPage) ? 'none' : 'flex';
+    }
 
-            channelsData.forEach((channel, index) => {
-                let isLocked = lockedChannels[index] || false;
-                let cardHTML = `
-                    <div class="glass rounded-xl overflow-hidden shadow-lg relative group transition hover:scale-[1.02]">
-                        <div class="h-40 bg-slate-800 flex items-center justify-center relative">
-                            <img src="${channel.logo}" alt="${channel.name}" class="h-24 object-contain">
-                            ${isLocked ? `
-                                <div class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
-                                    <i class="fa-solid fa-lock text-red-500 text-3xl mb-2"></i>
-                                    <span class="text-xs font-semibold text-red-400">Only for NXST Users</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-semibold text-white truncate">${channel.name}</h3>
-                            <button onclick="playChannel(${index})" class="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-white text-sm py-2 rounded-lg transition flex items-center justify-center space-x-2 ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}">
-                                <i class="fa-solid fa-play"></i><span>Play Stream</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                grid.innerHTML += cardHTML;
-            });
+    function changePage(direction) {
+      currentPage += direction;
+      renderChannels();
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      currentPage = 1;
+      renderCategoryButtons();
+      renderChannels();
+    }
+
+    function playChannel(ch, streamNum = 1) {
+      if (ch.isLocked) {
+        alert('🔒 এই চ্যানেলটি লক করা আছে!');
+        return;
+      }
+
+      let isStreamLocked = (streamNum === 1 && ch.lockStream1) || (streamNum === 2 && ch.lockStream2) || (streamNum === 3 && ch.lockStream3);
+      if (isStreamLocked) {
+        alert('🔒 এই স্ট্রিমটি লক করা আছে!');
+        return;
+      }
+
+      currentActiveChannel = ch;
+      let targetUrl = streamNum === 1 ? ch.stream1 : (streamNum === 2 ? ch.stream2 : ch.stream3);
+
+      if (!targetUrl || targetUrl.trim() === '') {
+        if (ch.stream1 && !ch.lockStream1) { streamNum = 1; targetUrl = ch.stream1; }
+        else if (ch.stream2 && !ch.lockStream2) { streamNum = 2; targetUrl = ch.stream2; }
+        else if (ch.stream3 && !ch.lockStream3) { streamNum = 3; targetUrl = ch.stream3; }
+      }
+
+      currentActiveStreamIndex = streamNum;
+      document.getElementById('infoChannelName').innerText = ch.name;
+      renderChannels();
+      updateStreamButtonsUI();
+
+      if (targetUrl && targetUrl.trim() !== '') {
+        document.getElementById('infoSource').innerText = `${ch.name} (Stream ${streamNum})`;
+        document.getElementById('streamStatus').innerText = `Playing Stream ${streamNum}`;
+        document.getElementById('streamStatus').style.background = '#005500';
+        executeStreamUrl(targetUrl.trim(), streamNum);
+      } else {
+        document.getElementById('infoSource').innerText = 'Unavailable';
+        document.getElementById('streamStatus').innerText = 'Locked / No Link';
+        document.getElementById('streamStatus').style.background = '#800000';
+        if (Hls.isSupported()) hls.destroy();
+        video.src = '';
+      }
+    }
+
+    function switchStream(streamNum) {
+      if (!currentActiveChannel) return;
+      playChannel(currentActiveChannel, streamNum);
+    }
+
+    function retryCurrentStream() {
+      if (currentActiveChannel) playChannel(currentActiveChannel, currentActiveStreamIndex);
+    }
+
+    function updateStreamButtonsUI() {
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`streamBtn${i}`);
+        if (btn && currentActiveChannel) {
+          let link = i === 1 ? currentActiveChannel.stream1 : (i === 2 ? currentActiveChannel.stream2 : currentActiveChannel.stream3);
+          let isLocked = (i === 1 && currentActiveChannel.lockStream1) || (i === 2 && currentActiveChannel.lockStream2) || (i === 3 && currentActiveChannel.lockStream3);
+          
+          const hasLink = link && link.trim() !== '' && !isLocked;
+          btn.disabled = !hasLink;
+          btn.innerText = isLocked ? `S${i} 🔒` : `Stream ${i}`;
+          btn.classList.toggle('active-stream', i === currentActiveStreamIndex && hasLink);
         }
+      }
+    }
 
-        function playChannel(index) {
-            if (lockedChannels[index]) {
-                alert("This channel is restricted! Please click 'Login as NXST User' above to access premium ISP streams.");
-                return;
-            }
-            alert("Playing public stream for: " + channelsData[index].name);
+    function executeStreamUrl(streamUrl, streamNum) {
+      if (Hls.isSupported()) {
+        hls.destroy();
+        hls = new Hls();
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(e => console.log('Autoplay:', e));
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+        video.play();
+      }
+    }
+
+    function toggleFullscreen() {
+      if (video.requestFullscreen) video.requestFullscreen();
+    }
+
+    // Admin Panel Functions
+    function openAdminModal() {
+      let pass = prompt("অ্যাডমিন পাসওয়ার্ড দিন (পাসওয়ার্ড: 123):");
+      if (pass === "123") {
+        renderCategoryManagerList();
+        populateAdminCategoryFilter();
+        renderModalInputs();
+        document.getElementById('linkModal').style.display = 'flex';
+      } else if (pass !== null) {
+        alert("ভুল পাসওয়ার্ড!");
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('linkModal').style.display = 'none';
+      renderChannels();
+    }
+
+    function populateAdminCategoryFilter() {
+      const select = document.getElementById('adminCatFilter');
+      select.innerHTML = '';
+      allCategories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+      if (allCategories.length > 0) select.value = allCategories[0];
+    }
+
+    function renderCategoryManagerList() {
+      const container = document.getElementById('adminCatManagerList');
+      container.innerHTML = '';
+      allCategories.forEach((cat) => {
+        const item = document.createElement('div');
+        item.className = 'cat-manage-item';
+        item.innerHTML = `
+          <span>${cat}</span>
+          <button class="cat-action-btn" onclick="editCategoryName('${cat}')">Edit</button>
+          <button class="cat-action-btn" style="color:#ff6b6b;" onclick="deleteCategory('${cat}')">Del</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function editCategoryName(oldCat) {
+      const newCat = prompt(`"${oldCat}" ক্যাটাগরির নতুন নাম দিন:`, oldCat);
+      if (!newCat || newCat.trim() === '' || newCat.trim().toUpperCase() === oldCat) return;
+      const formattedNew = newCat.trim().toUpperCase();
+      if (allCategories.includes(formattedNew)) { alert('ইতিমধ্যে রয়েছে!'); return; }
+
+      syncCurrentModalInputs();
+      const index = allCategories.indexOf(oldCat);
+      if (index !== -1) allCategories[index] = formattedNew;
+
+      unifiedChannels.forEach(ch => {
+        if (ch.categories && ch.categories.includes(oldCat)) {
+          const idx = ch.categories.indexOf(oldCat);
+          ch.categories[idx] = formattedNew;
         }
+      });
 
-        function openAdminModal() {
-            document.getElementById('admin-modal').classList.remove('hidden');
-        }
+      localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+      if (currentCategory === oldCat) currentCategory = formattedNew;
 
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.add('hidden');
-            document.getElementById('admin-auth-view').classList.remove('hidden');
-            document.getElementById('admin-dashboard-view').classList.add('hidden');
-            document.getElementById('admin-pass-input').value = '';
-        }
+      renderCategoryButtons();
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+    }
 
-        function verifyAdmin() {
-            let pass = document.getElementById('admin-pass-input').value;
-            if (pass === 'lolyt69') {
-                document.getElementById('admin-auth-view').classList.add('hidden');
-                document.getElementById('admin-dashboard-view').classList.remove('hidden');
-                renderAdminList();
-            } else {
-                alert('Incorrect Password!');
-            }
-        }
+    function deleteCategory(catToDelete) {
+      if (!confirm(`মুছে ফেলতে চান?`)) return;
+      syncCurrentModalInputs();
+      allCategories = allCategories.filter(c => c !== catToDelete);
+      unifiedChannels.forEach(ch => {
+        if (ch.categories) ch.categories = ch.categories.filter(c => c !== catToDelete);
+      });
+      localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+      currentCategory = allCategories.length > 0 ? allCategories[0] : '';
+      renderCategoryButtons();
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+    }
 
-        function renderAdminList() {
-            let list = document.getElementById('admin-channels-list');
-            list.innerHTML = '';
-            channelsData.forEach((channel, index) => {
-                let isLocked = lockedChannels[index] || false;
-                list.innerHTML += `
-                    <div class="flex items-center justify-between bg-slate-800 p-3 rounded-lg">
-                        <span class="text-sm truncate text-white">${channel.name}</span>
-                        <button onclick="toggleLock(${index})" class="px-3 py-1 rounded text-xs font-semibold ${isLocked ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'}">
-                            ${isLocked ? '<i class="fa-solid fa-lock"></i> Locked' : '<i class="fa-solid fa-lock-open"></i> Unlocked'}
-                        </button>
-                    </div>
-                `;
-            });
-        }
+    function addNewCategory() {
+      const input = document.getElementById('newCategoryInput');
+      const catName = input.value.trim().toUpperCase();
+      if (!catName) { alert('নাম দিন!'); return; }
+      if (allCategories.includes(catName)) { alert('ইতিমধ্যে আছে!'); return; }
 
-        function toggleLock(index) {
-            lockedChannels[index] = !lockedChannels[index];
-            localStorage.setItem('lockedChannels', JSON.stringify(lockedChannels));
-            renderAdminList();
-            renderChannels();
-        }
+      syncCurrentModalInputs();
+      allCategories.push(catName);
+      localStorage.setItem('nightwave_categories', JSON.stringify(allCategories));
+      input.value = '';
+      renderCategoryButtons();
+      renderCategoryManagerList();
+      populateAdminCategoryFilter();
+      renderModalInputs();
+    }
 
-        // Run application on load
-        initApp();
-    </script>
+    function syncCurrentModalInputs() {
+      const selectedAdminCat = document.getElementById('adminCatFilter')?.value || (allCategories.length > 0 ? allCategories[0] : 'SPORTS');
+      let categoryChannels = unifiedChannels.filter(c => c.categories && c.categories.includes(selectedAdminCat));
+      categoryChannels.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+
+      categoryChannels.forEach((ch) => {
+        const slotInput = document.getElementById(`slot_${ch.id}`);
+        const nameInput = document.getElementById(`name_${ch.id}`);
+        const logoInput = document.getElementById(`logo_${ch.id}`);
+        const s1Input = document.getElementById(`stream1_${ch.id}`);
+        const s2Input = document.getElementById(`stream2_${ch.id}`);
+        const s3Input = document.getElementById(`stream3_${ch.id}`);
+        const lockCh = document.getElementById(`lock_ch_${ch.id}`);
+        const lockS1 = document.getElementById(`lock_s1_${ch.id}`);
+        const lockS2 = document.getElementById(`lock_s2_${ch.id}`);
+        const lockS3 = document.getElementById(`lock_s3_${ch.id}`);
+
+        const selectedCats = [];
+        document.querySelectorAll(`.cat_checkbox_${ch.id}:checked`).forEach(cb => selectedCats.push(cb.value));
+
+        if (nameInput) ch.name = nameInput.value;
+        if (logoInput) ch.logo = logoInput.value;
+        if (s1Input) ch.stream1 = s1Input.value;
+        if (s2Input) ch.stream2 = s2Input.value;
+        if (s3Input) ch.stream3 = s3Input.value;
+        if (lockCh) ch.isLocked = lockCh.checked;
+        if (lockS1) ch.lockStream1 = lockS1.checked;
+        if (lockS2) ch.lockStream2 = lockS2.checked;
+        if (lockS3) ch.lockStream3 = lockS3.checked;
+        if (selectedCats.length > 0) ch.categories = selectedCats;
+
+        let targetSlot = slotInput ? parseInt(slotInput.value) : ch.slot;
+        if (isNaN(targetSlot) || targetSlot < 1) targetSlot = 1;
+        ch.slot = targetSlot;
+      });
+
+      unifiedChannels.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+    }
+
+    function renderModalInputs() {
+      const container = document.getElementById('modalInputs');
+      const searchQuery = (document.getElementById('adminSearchInput')?.value || '').toLowerCase().trim();
+      const selectedAdminCat = document.getElementById('adminCatFilter')?.value || (allCategories.length > 0 ? allCategories[0] : '');
+      
+      let activeList = unifiedChannels.filter(ch => ch.categories && ch.categories.includes(selectedAdminCat));
+      activeList.sort((a, b) => (Number(a.slot) || 0) - (Number(b.slot) || 0));
+      container.innerHTML = '';
+
+      if (activeList.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:15px; color:#777; font-size:12px;">কোনো চ্যানেল পাওয়া যায়নি।</div>`;
+        return;
+      }
+
+      activeList.forEach((ch) => {
+        if (!ch.categories) ch.categories = [];
+        if (searchQuery && !ch.name.toLowerCase().includes(searchQuery)) return;
+
+        const group = document.createElement('div');
+        group.className = 'channel-input-group';
+
+        let checkboxesHTML = '';
+        allCategories.forEach(cat => {
+          const isChecked = ch.categories.includes(cat) ? 'checked' : '';
+          checkboxesHTML += `<label><input type="checkbox" class="cat_checkbox_${ch.id}" value="${cat}" ${isChecked}> ${cat}</label>`;
+        });
+
+        let logoPreview = ch.logo ? `<img src="${ch.logo}" class="logo-preview-inline" alt="preview">` : `<span style="font-size:9px; color:#777;">No Logo</span>`;
+
+        group.innerHTML = `
+          <div class="edit-col-left">
+            <div class="slot-row">
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span class="admin-field-label">Slot:</span>
+                <input type="number" id="slot_${ch.id}" class="slot-input" value="${ch.slot || 1}">
+              </div>
+              <button class="delete-btn" onclick="removeSlot(${ch.id})">Delete</button>
+            </div>
+            
+            <div>
+              <span class="admin-field-label">Name:</span>
+              <input type="text" id="name_${ch.id}" value="${ch.name}">
+            </div>
+
+            <div style="background:#1f1f1f; padding:5px; border-radius:2px; border:1px solid #444; display:flex; flex-direction:column; gap:3px;">
+              <label style="font-size:10px; font-weight:bold; color:#ff4d4d; cursor:pointer;"><input type="checkbox" id="lock_ch_${ch.id}" ${ch.isLocked ? 'checked' : ''}> 🔒 Lock Channel</label>
+              <div style="display:flex; gap:8px; font-size:9px; color:#ffcc00;">
+                <label><input type="checkbox" id="lock_s1_${ch.id}" ${ch.lockStream1 ? 'checked' : ''}> S1 Lock</label>
+                <label><input type="checkbox" id="lock_s2_${ch.id}" ${ch.lockStream2 ? 'checked' : ''}> S2 Lock</label>
+                <label><input type="checkbox" id="lock_s3_${ch.id}" ${ch.lockStream3 ? 'checked' : ''}> S3 Lock</label>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="admin-field-label">Logo URL:</span>
+                ${logoPreview}
+              </div>
+              <input type="text" id="logo_${ch.id}" value="${ch.logo || ''}">
+            </div>
+
+            <div>
+              <span class="admin-field-label">Categories:</span>
+              <div class="categories-checkbox-group">${checkboxesHTML}</div>
+            </div>
+          </div>
+
+          <div class="edit-col-right">
+            <div>
+              <span class="admin-field-label" style="color:#00cc66;">Stream 1:</span>
+              <input type="text" id="stream1_${ch.id}" value="${ch.stream1 || ''}">
+            </div>
+            <div>
+              <span class="admin-field-label" style="color:#3399ff;">Stream 2:</span>
+              <input type="text" id="stream2_${ch.id}" value="${ch.stream2 || ''}">
+            </div>
+            <div>
+              <span class="admin-field-label" style="color:#ff9933;">Stream 3:</span>
+              <input type="text" id="stream3_${ch.id}" value="${ch.stream3 || ''}">
+            </div>
+          </div>
+        `;
+        container.appendChild(group);
+      });
+    }
+
+    function addNewSlot() {
+      syncCurrentModalInputs();
+      const newId = Date.now();
+      const selectedAdminCat = document.getElementById('adminCatFilter')?.value || 'SPORTS';
+      const catChannels = unifiedChannels.filter(c => c.categories && c.categories.includes(selectedAdminCat));
+      const nextSlot = catChannels.length > 0 ? Math.max(...catChannels.map(c => Number(c.slot) || 0)) + 1 : 1;
+
+      unifiedChannels.push({ 
+        id: newId, slot: nextSlot, name: `Channel ${nextSlot}`, categories: [selectedAdminCat], 
+        stream1: '', stream2: '', stream3: '', logo: '', textLogo: 'TV',
+        isLocked: false, lockStream1: false, lockStream2: false, lockStream3: false
+      });
+      renderModalInputs();
+    }
+
+    function removeSlot(id) {
+      syncCurrentModalInputs();
+      unifiedChannels = unifiedChannels.filter(c => c.id !== id);
+      renderModalInputs();
+    }
+
+    function saveChannels() {
+      syncCurrentModalInputs();
+      localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels));
+      closeModal();
+      renderChannels();
+      alert('সফলভাবে সেভ করা হয়েছে!');
+    }
+
+    function exportJSONBackup() {
+      syncCurrentModalInputs();
+      const data = { categories: allCategories, unifiedChannels: unifiedChannels, tickerNotice: currentTickerNotice };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "NXST_IPTV_Backup.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importJSONBackup(event) {
+      const fileReader = new FileReader();
+      fileReader.onload = function (e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.categories) { allCategories = parsed.categories; localStorage.setItem('nightwave_categories', JSON.stringify(allCategories)); }
+          if (parsed.unifiedChannels) { unifiedChannels = parsed.unifiedChannels; localStorage.setItem('nxst_multi_channels', JSON.stringify(unifiedChannels)); }
+          renderCategoryButtons();
+          renderChannels();
+          renderCategoryManagerList();
+          populateAdminCategoryFilter();
+          renderModalInputs();
+          alert('রিস্টোর সফল হয়েছে!');
+        } catch (err) { alert('ভুল ফাইল!'); }
+      };
+      fileReader.readAsText(event.target.files[0]);
+    }
+
+    // Initial Load
+    applyTickerText();
+    setChannelViewMode(activeViewMode);
+    renderCategoryButtons();
+    renderChannels();
+  </script>
 </body>
 </html>
